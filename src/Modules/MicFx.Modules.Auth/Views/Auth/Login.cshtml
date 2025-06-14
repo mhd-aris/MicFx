@@ -1,0 +1,93 @@
+@model MicFx.Modules.Auth.Domain.DTOs.LoginRequest
+
+<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="w-4/5 max-w-md mx-auto space-y-8">
+        <div>
+            <h2 class="text-center text-3xl font-bold text-gray-900">Sign in to MicFx</h2>
+            <p class="mt-2 text-center text-sm text-gray-600">
+                Enter your credentials to access the admin panel
+            </p>
+        </div>
+
+        <div class="bg-white shadow-md rounded-lg p-6">
+            <form class="space-y-6" action="/auth/login" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="ReturnUrl" value="@ViewData["ReturnUrl"]" />
+                
+                <div class="text-red-600 text-sm" data-valmsg-summary="true">
+                    <ul>
+                        <li style="display:none"></li>
+                    </ul>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label for="Email" class="sr-only">Email address</label>
+                        <input name="Email" id="Email" type="email" autocomplete="email" required
+                            class="block w-full rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 text-gray-900 shadow-sm focus:outline-none focus:ring-micfx-500 focus:border-micfx-500 sm:text-sm"
+                            placeholder="Email address">
+                        <span class="text-red-600 text-sm" data-valmsg-for="Email" data-valmsg-replace="true"></span>
+                    </div>
+                    <div>
+                        <label for="Password" class="sr-only">Password</label>
+                        <input name="Password" id="Password" type="password" autocomplete="current-password" required
+                            class="block w-full rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 text-gray-900 shadow-sm focus:outline-none focus:ring-micfx-500 focus:border-micfx-500 sm:text-sm"
+                            placeholder="Password">
+                        <span class="text-red-600 text-sm" data-valmsg-for="Password" data-valmsg-replace="true"></span>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <input id="RememberMe" name="RememberMe" type="checkbox" value="true"
+                            class="h-4 w-4 text-micfx-600 focus:ring-micfx-500 border-gray-300 rounded">
+                        <input name="RememberMe" type="hidden" value="false" />
+                        <label for="RememberMe" class="ml-2 block text-sm text-gray-900">Remember me</label>
+                    </div>
+                    <div class="text-sm">
+                        <a href="#" class="text-micfx-600 hover:text-micfx-500 font-medium">
+                            Forgot your password?
+                        </a>
+                    </div>
+                </div>
+
+                <div>
+                    <button type="submit"
+                        class="w-full flex items-center justify-center gap-2 rounded-md border border-transparent bg-micfx-600 py-2 px-4 text-sm font-medium text-white hover:bg-micfx-700 focus:outline-none focus:ring-2 focus:ring-micfx-500 focus:ring-offset-2">
+                        <svg class="h-5 w-5 text-micfx-300 group-hover:text-white" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                        </svg>
+                        Sign in
+                    </button>
+                </div>
+
+                <div class="text-center">
+                    <p class="text-sm text-gray-600">
+                        Don't have an account?
+                        <a href="/auth/register" class="text-micfx-600 hover:text-micfx-500 font-medium">
+                            Sign up here
+                        </a>
+                    </p>
+                </div>
+            </form>
+        </div>
+
+        <div class="mt-6 bg-blue-50 border border-blue-200 rounded-md p-4">
+            <h3 class="text-sm font-medium text-blue-800">Demo Credentials</h3>
+            <div class="mt-2 text-sm text-blue-700">
+                <p><strong>Admin:</strong> admin@micfx.dev / Admin123!</p>
+                <p class="text-xs mt-1">This will be created automatically on first run</p>
+            </div>
+        </div>
+
+        <div class="text-center">
+            <a href="/" class="inline-flex items-center text-sm text-gray-500 hover:text-gray-700">
+                <svg class="mr-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Back to site
+            </a>
+        </div>
+    </div>
+</div>

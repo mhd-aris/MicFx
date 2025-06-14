@@ -1,0 +1,43 @@
+# MicFx Framework .gitignore
+
+## .NET Core
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+## Node.js
+node_modules/
+npm-debug.log*
+
+## Database
+*.sqlite
+*.db
+
+## Environment & Config
+.env
+.env.local
+appsettings.Development.json
+appsettings.Local.json
+
+## OS Files
+.DS_Store
+Thumbs.db
+
+## IDE
+.vscode/
+.idea/
+
+## Build & Temp
+*.log
+*.tmp
+*.temp
+*.bak
+
+## Certificates
+*.pfx
+*.p12
+
+## Personal Notes
+CONTEXT.md

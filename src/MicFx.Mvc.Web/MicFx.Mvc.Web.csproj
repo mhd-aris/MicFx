@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\MicFx.SharedKernel\MicFx.SharedKernel.csproj" />
+    <ProjectReference Include="..\MicFx.Abstractions\MicFx.Abstractions.csproj" />
+    <ProjectReference Include="..\MicFx.Core\MicFx.Core.csproj" />
+    <ProjectReference Include="..\MicFx.Infrastructure\MicFx.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\MicFx.Modules.HelloWorld\MicFx.Modules.HelloWorld.csproj" />
+    <ProjectReference Include="..\Modules\MicFx.Modules.Auth\MicFx.Modules.Auth.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="8.0.4" />
+  </ItemGroup>
+
+  
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+</Project>

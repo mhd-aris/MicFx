@@ -1,0 +1,139 @@
+@using MicFx.SharedKernel.Interfaces
+@using MicFx.Mvc.Web.Admin.Services
+@inject AdminNavDiscoveryService NavDiscoveryService
+
+@{
+    var navItems = await NavDiscoveryService.GetNavigationItemsAsync(Context);
+    var navItemsByCategory = await NavDiscoveryService.GetNavigationItemsByCategoryAsync(Context);
+}
+
+<!-- Dynamic Navigation from Modules -->
+@if (navItems.Any())
+{
+    <div class="mt-6 px-4">
+        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+            Modules
+        </div>
+        
+        @foreach (var category in navItemsByCategory.OrderBy(c => c.Key))
+        {
+            @if (category.Value.Any())
+            {
+                @if (navItemsByCategory.Count > 1)
+                {
+                    <div class="mb-4">
+                        <div class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2 px-2">
+                            @category.Key
+                        </div>
+                    </div>
+                }
+                
+                <div class="space-y-1 mb-4">
+                    @foreach (var item in category.Value.OrderBy(i => i.Order))
+                    {
+                        <a href="@item.Url" 
+                           class="group flex items-center px-4 py-3 text-gray-600 rounded-lg hover:bg-@GetHoverColor(item) hover:text-@GetHoverTextColor(item) transition-all duration-200 @(item.IsActive ? GetActiveClasses(item) : "")">
+                            
+                            @if (!string.IsNullOrEmpty(item.Icon))
+                            {
+                                <div class="p-2 bg-gray-100 rounded-lg mr-3 group-hover:bg-@GetIconBgColor(item) transition-colors duration-200">
+                                    @Html.Raw(GetIconSvg(item.Icon))
+                                </div>
+                            }
+                            
+                            <span class="font-medium flex-1">@item.Title</span>
+                            
+                            @if (!string.IsNullOrEmpty(item.Category) && item.Category != "General")
+                            {
+                                <span class="text-xs text-gray-400 ml-2">@item.Category</span>
+                            }
+                        </a>
+                    }
+                </div>
+            }
+        }
+    </div>
+}
+
+@functions {
+    private string GetHoverColor(AdminNavItem item)
+    {
+        return item.Category switch
+        {
+            "Users" => "orange-50",
+            "Content" => "green-50",
+            "Settings" => "purple-50",
+            "Reports" => "indigo-50",
+            _ => "blue-50"
+        };
+    }
+    
+    private string GetHoverTextColor(AdminNavItem item)
+    {
+        return item.Category switch
+        {
+            "Users" => "orange-700",
+            "Content" => "green-700",
+            "Settings" => "purple-700",
+            "Reports" => "indigo-700",
+            _ => "blue-700"
+        };
+    }
+    
+    private string GetIconBgColor(AdminNavItem item)
+    {
+        return item.Category switch
+        {
+            "Users" => "orange-100",
+            "Content" => "green-100",
+            "Settings" => "purple-100",
+            "Reports" => "indigo-100",
+            _ => "blue-100"
+        };
+    }
+    
+    private string GetActiveClasses(AdminNavItem item)
+    {
+        var baseColor = item.Category switch
+        {
+            "Users" => "orange",
+            "Content" => "green",
+            "Settings" => "purple",
+            "Reports" => "indigo",
+            _ => "blue"
+        };
+        
+        return $"bg-{baseColor}-50 text-{baseColor}-700 border-l-4 border-{baseColor}-600";
+    }
+    
+    private string GetIconSvg(string iconName)
+    {
+        // Default icon mapping - modules can provide their own SVG
+        return iconName.ToLower() switch
+        {
+            "users" => @"<svg class=""w-5 h-5 group-hover:text-orange-600 transition-colors duration-200"" fill=""none"" stroke=""currentColor"" viewBox=""0 0 24 24"">
+                          <path stroke-linecap=""round"" stroke-linejoin=""round"" stroke-width=""2"" d=""M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z""></path>
+                        </svg>",
+            
+            "content" => @"<svg class=""w-5 h-5 group-hover:text-green-600 transition-colors duration-200"" fill=""none"" stroke=""currentColor"" viewBox=""0 0 24 24"">
+                           <path stroke-linecap=""round"" stroke-linejoin=""round"" stroke-width=""2"" d=""M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z""></path>
+                         </svg>",
+            
+            "settings" => @"<svg class=""w-5 h-5 group-hover:text-purple-600 transition-colors duration-200"" fill=""none"" stroke=""currentColor"" viewBox=""0 0 24 24"">
+                            <path stroke-linecap=""round"" stroke-linejoin=""round"" stroke-width=""2"" d=""M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4""></path>
+                          </svg>",
+            
+            "reports" => @"<svg class=""w-5 h-5 group-hover:text-indigo-600 transition-colors duration-200"" fill=""none"" stroke=""currentColor"" viewBox=""0 0 24 24"">
+                           <path stroke-linecap=""round"" stroke-linejoin=""round"" stroke-width=""2"" d=""M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z""></path>
+                         </svg>",
+            
+            "hello" or "helloworld" => @"<svg class=""w-5 h-5 group-hover:text-blue-600 transition-colors duration-200"" fill=""none"" stroke=""currentColor"" viewBox=""0 0 24 24"">
+                                         <path stroke-linecap=""round"" stroke-linejoin=""round"" stroke-width=""2"" d=""M7 8h10m0 0V6a2 2 0 00-2-2H9a2 2 0 00-2 2v2m10 0v10a2 2 0 01-2 2H9a2 2 0 01-2-2V8m10 0H7m5 5.5a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z""></path>
+                                       </svg>",
+            
+            _ => @"<svg class=""w-5 h-5 group-hover:text-blue-600 transition-colors duration-200"" fill=""none"" stroke=""currentColor"" viewBox=""0 0 24 24"">
+                   <path stroke-linecap=""round"" stroke-linejoin=""round"" stroke-width=""2"" d=""M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10""></path>
+                 </svg>"
+        };
+    }
+} 

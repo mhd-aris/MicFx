@@ -1,0 +1,134 @@
+@model MicFx.Mvc.Web.Areas.Admin.Controllers.RoleTestViewModel
+
+@{
+    ViewData["Title"] = "Role Testing - Admin Navigation";
+}
+
+<div class="container mx-auto px-4 py-8">
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">Role-Based Navigation Testing</h1>
+        <p class="text-gray-600">Test how navigation items appear for different user roles</p>
+        <a href="@Url.Action("Index", "Diagnostics", new { area = "Admin" })" 
+           class="inline-block mt-4 text-blue-600 hover:text-blue-800">
+            ← Back to Diagnostics
+        </a>
+    </div>
+
+    <!-- Test Results -->
+    <div class="space-y-8">
+        @foreach (var result in Model.TestResults)
+        {
+                         <div class="bg-white rounded-lg shadow p-6">
+                 <div class="flex items-center justify-between mb-4">
+                     <h3 class="text-lg font-semibold text-gray-900">@result.Description</h3>
+                     <span class="px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded">
+                         @result.NavigationItemCount items visible
+                     </span>
+                 </div>
+                 
+                 <div class="mb-4">
+                     <p class="text-sm text-gray-600 mb-2">Test Roles:</p>
+                     @if (result.Roles.Any())
+                     {
+                         <div class="flex flex-wrap gap-2">
+                             @foreach (var role in result.Roles)
+                             {
+                                 <span class="px-2 py-1 bg-gray-100 text-gray-800 text-sm rounded">@role</span>
+                             }
+                         </div>
+                     }
+                     else
+                     {
+                         <span class="text-gray-500 italic">No specific roles (public access)</span>
+                     }
+                 </div>
+
+                 @if (result.NavigationItems.Any())
+                 {
+                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                         @foreach (var item in result.NavigationItems)
+                         {
+                             <div class="border border-gray-200 rounded-lg p-4">
+                                 <div class="flex items-center justify-between mb-2">
+                                     <h4 class="font-semibold text-gray-900">@item.Title</h4>
+                                     <span class="text-xs text-gray-500">@item.Category</span>
+                                 </div>
+                                 
+                                 <div class="space-y-1 text-sm text-gray-600">
+                                     <p><strong>URL:</strong> @item.Url</p>
+                                     @if (item.RequiredRoles?.Any() == true)
+                                     {
+                                         <div>
+                                             <strong>Required Roles:</strong>
+                                             <div class="flex flex-wrap gap-1 mt-1">
+                                                 @foreach (var role in item.RequiredRoles)
+                                                 {
+                                                     <span class="px-1 py-0.5 bg-blue-100 text-blue-800 text-xs rounded">@role</span>
+                                                 }
+                                             </div>
+                                         </div>
+                                     }
+                                     else
+                                     {
+                                         <p><strong>Required Roles:</strong> <span class="italic">None (public)</span></p>
+                                     }
+                                 </div>
+                             </div>
+                         }
+                     </div>
+                 }
+                 else
+                 {
+                     <div class="text-center py-8 text-gray-500">
+                         <p class="text-lg font-medium">No navigation items visible</p>
+                         <p class="text-sm">This user role combination has no access to admin navigation items</p>
+                     </div>
+                 }
+            </div>
+        }
+    </div>
+
+    <!-- Summary -->
+    <div class="mt-8 bg-gray-50 rounded-lg p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Test Summary</h3>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="text-center">
+                <p class="text-2xl font-bold text-blue-600">@Model.TestResults.Count</p>
+                <p class="text-sm text-gray-600">Test Scenarios</p>
+            </div>
+            <div class="text-center">
+                <p class="text-2xl font-bold text-green-600">@Model.TestResults.Sum(r => r.NavigationItemCount)</p>
+                <p class="text-sm text-gray-600">Total Visible Items</p>
+            </div>
+            <div class="text-center">
+                <p class="text-2xl font-bold text-purple-600">@Model.TestResults.SelectMany(r => r.NavigationItems).Select(i => i.Category).Distinct().Count()</p>
+                <p class="text-sm text-gray-600">Categories</p>
+            </div>
+            <div class="text-center">
+                <p class="text-2xl font-bold text-orange-600">@Model.TestResults.SelectMany(r => r.Roles).Distinct().Count()</p>
+                <p class="text-sm text-gray-600">Unique Roles</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="mt-8 flex space-x-4">
+        <a href="@Url.Action("Index", "Diagnostics", new { area = "Admin" })" 
+           class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+            Back to Diagnostics
+        </a>
+        
+        <a href="@Url.Action("GetNavigationJson", "Diagnostics", new { area = "Admin" })" 
+           target="_blank"
+           class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+            View Current User JSON
+        </a>
+        
+        <form asp-action="ClearCache" asp-controller="Diagnostics" asp-area="Admin" method="post" class="inline">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="bg-orange-600 text-white px-4 py-2 rounded hover:bg-orange-700">
+                Clear Cache
+            </button>
+        </form>
+    </div>
+</div> 

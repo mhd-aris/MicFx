@@ -1,0 +1,270 @@
+@model MicFx.Modules.Auth.Domain.DTOs.EditRoleViewModel
+
+@{
+    ViewData["Title"] = $"Edit Role - {Model.Name}";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="space-y-6">
+    <!-- Header with Breadcrumbs -->
+    <div class="flex items-center justify-between">
+        <div>
+            <nav class="flex items-center space-x-2 text-sm text-gray-500 mb-4">
+                <a href="@Url.Action("Index")" class="hover:text-gray-700">Role Management</a>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+                <a href="@Url.Action("Details", new { id = Model.Id })" class="hover:text-gray-700">@Model.Name</a>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+                <span class="text-gray-900 font-medium">Edit</span>
+            </nav>
+            <h1 class="text-3xl font-bold text-gray-900">Edit Role</h1>
+            <p class="mt-2 text-gray-600">Update role information and permissions</p>
+        </div>
+        
+        <div class="flex items-center space-x-3">
+            <a href="@Url.Action("Details", new { id = Model.Id })" 
+               class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors duration-200">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                </svg>
+                View Details
+            </a>
+            <a href="@Url.Action("Index")" 
+               class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors duration-200">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Back to Roles
+            </a>
+        </div>
+    </div>
+
+    <!-- System Role Warning -->
+    @if (Model.IsSystemRole)
+    {
+        <div class="bg-yellow-50 border border-yellow-200 rounded-md p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-yellow-800">System Role</h3>
+                    <div class="mt-2 text-sm text-yellow-700">
+                        <p>This is a system role. Some properties may be restricted from editing to maintain system integrity.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Edit Form -->
+    <div class="bg-white shadow-sm rounded-lg border border-gray-200">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">Role Information</h2>
+        </div>
+        
+        <form asp-action="Edit" asp-route-id="@Model.Id" method="post" class="px-6 py-6">
+            @Html.AntiForgeryToken()
+            <input asp-for="Id" type="hidden">
+            <input asp-for="IsSystemRole" type="hidden">
+            
+            <!-- Validation Summary -->
+            <div asp-validation-summary="All" class="mb-6 p-4 bg-red-50 border border-red-200 rounded-md hidden" id="validation-summary">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-red-800">Please correct the following errors:</h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Role Name -->
+                <div>
+                    <label asp-for="Name" class="block text-sm font-medium text-gray-700 mb-2">Role Name</label>
+                    @if (Model.IsSystemRole)
+                    {
+                        <input asp-for="Name" type="text" readonly
+                               class="block w-full rounded-md border border-gray-300 px-3 py-2 bg-gray-50 text-gray-500 shadow-sm sm:text-sm cursor-not-allowed">
+                        <p class="mt-1 text-sm text-gray-500">System role names cannot be changed</p>
+                    }
+                    else
+                    {
+                        <input asp-for="Name" type="text" 
+                               class="block w-full rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-micfx-500 focus:outline-none focus:ring-micfx-500 sm:text-sm"
+                               placeholder="Enter role name">
+                    }
+                    <span asp-validation-for="Name" class="text-red-600 text-sm"></span>
+                </div>
+
+                <!-- Priority -->
+                <div>
+                    <label asp-for="Priority" class="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+                    <input asp-for="Priority" type="number" min="1" max="999" 
+                           class="block w-full rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-micfx-500 focus:outline-none focus:ring-micfx-500 sm:text-sm"
+                           placeholder="Enter priority (lower = higher priority)">
+                    <span asp-validation-for="Priority" class="text-red-600 text-sm"></span>
+                    <p class="mt-1 text-sm text-gray-500">Lower number = higher priority (e.g., 1 = highest)</p>
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div class="mt-6">
+                <label asp-for="Description" class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                <textarea asp-for="Description" rows="3" 
+                          class="block w-full rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-micfx-500 focus:outline-none focus:ring-micfx-500 sm:text-sm"
+                          placeholder="Enter role description"></textarea>
+                <span asp-validation-for="Description" class="text-red-600 text-sm"></span>
+            </div>
+
+            <!-- Active Status -->
+            <div class="mt-6">
+                <div class="flex items-center">
+                    <input asp-for="IsActive" type="checkbox" 
+                           class="h-4 w-4 rounded border-gray-300 text-micfx-600 focus:ring-micfx-500">
+                    <label asp-for="IsActive" class="ml-2 block text-sm text-gray-900">
+                        Active (users can be assigned to this role)
+                    </label>
+                </div>
+                <span asp-validation-for="IsActive" class="text-red-600 text-sm"></span>
+            </div>
+
+            <!-- Permissions Section -->
+            <div class="mt-8 border-t border-gray-200 pt-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Permissions</h3>
+                
+                @if (Model.AvailablePermissions.Any())
+                {
+                    var groupedPermissions = Model.AvailablePermissions.GroupBy(p => p.Module).OrderBy(g => g.Key);
+                    
+                    <div class="space-y-6">
+                        @foreach (var moduleGroup in groupedPermissions)
+                        {
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h4 class="text-md font-semibold text-gray-800 flex items-center">
+                                        <svg class="w-5 h-5 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 7a2 2 0 012-2h10a2 2 0 012 2v2M5 7h14M5 13h14M5 17h14"></path>
+                                        </svg>
+                                        @moduleGroup.Key Module
+                                    </h4>
+                                    <div class="flex items-center space-x-2">
+                                        <button type="button" class="text-sm text-micfx-600 hover:text-micfx-700 select-all-module" data-module="@moduleGroup.Key">
+                                            Select All
+                                        </button>
+                                        <span class="text-gray-300">|</span>
+                                        <button type="button" class="text-sm text-gray-600 hover:text-gray-700 deselect-all-module" data-module="@moduleGroup.Key">
+                                            Deselect All
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                @{
+                                    var categoryGroups = moduleGroup.GroupBy(p => p.Category ?? "Other").OrderBy(g => g.Key);
+                                }
+                                
+                                @foreach (var categoryGroup in categoryGroups)
+                                {
+                                    <div class="mb-4">
+                                        <h5 class="text-sm font-medium text-gray-700 mb-2">@categoryGroup.Key</h5>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                                            @foreach (var permission in categoryGroup.OrderBy(p => p.DisplayName))
+                                            {
+                                                <div class="flex items-start p-3 bg-gray-50 rounded border hover:bg-gray-100 transition-colors">
+                                                    <input type="checkbox" 
+                                                           name="SelectedPermissions" 
+                                                           value="@permission.Id" 
+                                                           id="permission-@permission.Id"
+                                                           class="h-4 w-4 rounded border-gray-300 text-micfx-600 focus:ring-micfx-500 mt-0.5"
+                                                           data-module="@moduleGroup.Key"
+                                                           @(permission.IsSelected ? "checked" : "")>
+                                                    <label for="permission-@permission.Id" class="ml-2 flex-1 cursor-pointer">
+                                                        <div class="text-sm font-medium text-gray-900">@permission.DisplayName</div>
+                                                        @if (!string.IsNullOrEmpty(permission.Description))
+                                                        {
+                                                            <div class="text-xs text-gray-600 mt-1">@permission.Description</div>
+                                                        }
+                                                        @if (permission.IsSystemPermission)
+                                                        {
+                                                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 mt-1">
+                                                                System
+                                                            </span>
+                                                        }
+                                                    </label>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-8">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                        </svg>
+                        <h3 class="mt-2 text-sm font-medium text-gray-900">No permissions available</h3>
+                        <p class="mt-1 text-sm text-gray-500">There are no permissions to assign to this role.</p>
+                    </div>
+                }
+            </div>
+
+            <!-- Form Actions -->
+            <div class="mt-8 flex items-center justify-end space-x-3 pt-6 border-t border-gray-200">
+                <a href="@Url.Action("Details", new { id = Model.Id })" 
+                   class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-micfx-500">
+                    Cancel
+                </a>
+                <button type="submit" 
+                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    Update Role
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Select All/Deselect All functionality
+            document.querySelectorAll('.select-all-module').forEach(button => {
+                button.addEventListener('click', function() {
+                    const module = this.dataset.module;
+                    const checkboxes = document.querySelectorAll(`input[data-module="${module}"]`);
+                    checkboxes.forEach(checkbox => checkbox.checked = true);
+                });
+            });
+
+            document.querySelectorAll('.deselect-all-module').forEach(button => {
+                button.addEventListener('click', function() {
+                    const module = this.dataset.module;
+                    const checkboxes = document.querySelectorAll(`input[data-module="${module}"]`);
+                    checkboxes.forEach(checkbox => checkbox.checked = false);
+                });
+            });
+
+            // Show validation summary if there are errors
+            const validationSummary = document.getElementById('validation-summary');
+            if (validationSummary && validationSummary.children.length > 1) {
+                validationSummary.classList.remove('hidden');
+            }
+        });
+    </script>
+} 

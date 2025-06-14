@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+/* MicFx Theme Configuration */
+@theme {
+  --color-micfx-50: #f0f9ff;
+  --color-micfx-100: #e0f2fe;
+  --color-micfx-200: #bae6fd;
+  --color-micfx-300: #7dd3fc;
+  --color-micfx-400: #38bdf8;
+  --color-micfx-500: #0ea5e9;
+  --color-micfx-600: #0284c7;
+  --color-micfx-700: #0369a1;
+  --color-micfx-800: #075985;
+  --color-micfx-900: #0c4a6e;
+}
+
+/* MicFx Custom Components */
+.micfx-card {
+  @apply bg-white rounded-lg shadow-md p-6 border border-gray-200;
+}
+
+.micfx-button {
+  @apply px-4 py-2 rounded-md font-medium transition-colors duration-200;
+}
+
+.micfx-button-primary {
+  @apply px-4 py-2 rounded-md font-medium transition-colors duration-200 bg-micfx-600 text-white hover:bg-micfx-700 focus:ring-2 focus:ring-micfx-500 focus:ring-offset-2;
+}
+
+.micfx-button-secondary {
+  @apply px-4 py-2 rounded-md font-medium transition-colors duration-200 bg-gray-200 text-gray-900 hover:bg-gray-300 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2;
+}
+
+.micfx-input {
+  @apply block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-micfx-500 focus:border-micfx-500;
+}
+
+.micfx-nav {
+  @apply bg-white shadow-sm border-b border-gray-200;
+}
+
+.micfx-nav-item {
+  @apply px-3 py-2 text-sm font-medium text-gray-700 hover:text-micfx-600 hover:bg-gray-50 rounded-md transition-colors duration-200;
+}
+
+.micfx-nav-item-active {
+  @apply px-3 py-2 text-sm font-medium text-micfx-600 bg-micfx-50 rounded-md transition-colors duration-200;
+}
+
+.micfx-container {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+.micfx-module-header {
+  @apply border-b border-gray-200 pb-4 mb-6;
+}
+
+.micfx-module-title {
+  @apply text-2xl font-bold text-gray-900;
+}
+
+.micfx-module-description {
+  @apply mt-2 text-gray-600;
+}

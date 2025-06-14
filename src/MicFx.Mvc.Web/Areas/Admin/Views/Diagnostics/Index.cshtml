@@ -1,0 +1,106 @@
+@model MicFx.Mvc.Web.Areas.Admin.Controllers.DiagnosticsViewModel
+
+@{
+    ViewData["Title"] = "Admin Navigation Diagnostics";
+}
+
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold text-gray-900 mb-6">Admin Navigation Diagnostics</h1>
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Scanned Assemblies</h3>
+            <p class="text-3xl font-bold text-blue-600">@Model.ScanResults.ScannedAssemblies</p>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Contributors Found</h3>
+            <p class="text-3xl font-bold text-green-600">@Model.ScanResults.Contributors.Count</p>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Navigation Items</h3>
+            <p class="text-3xl font-bold text-purple-600">@Model.NavigationItems.Count()</p>
+        </div>
+    </div>
+    
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-xl font-semibold text-gray-900 mb-4">User Information</h3>
+            <div class="space-y-2">
+                <p><strong>Authenticated:</strong> @(Model.UserInfo.IsAuthenticated ? "Yes" : "No")</p>
+                <p><strong>User Name:</strong> @Model.UserInfo.UserName</p>
+                <p><strong>User ID:</strong> @Model.UserInfo.UserId</p>
+                <p><strong>Roles:</strong> @string.Join(", ", Model.UserInfo.Roles)</p>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-xl font-semibold text-gray-900 mb-4">Scan Results</h3>
+            <div class="space-y-2">
+                <h4 class="font-semibold">Assemblies:</h4>
+                <ul class="list-disc list-inside text-sm">
+                    @foreach (var assembly in Model.ScanResults.AssemblyNames)
+                    {
+                        <li>@assembly</li>
+                    }
+                </ul>
+                
+                <h4 class="font-semibold mt-4">Contributors:</h4>
+                <ul class="list-disc list-inside text-sm">
+                    @foreach (var contributor in Model.ScanResults.Contributors)
+                    {
+                        <li>@contributor.TypeName</li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mt-8 bg-white rounded-lg shadow p-6">
+        <h3 class="text-xl font-semibold text-gray-900 mb-4">Navigation Items</h3>
+        @if (Model.NavigationItems.Any())
+        {
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                @foreach (var item in Model.NavigationItems.OrderBy(i => i.Order))
+                {
+                    <div class="border rounded-lg p-4">
+                        <h4 class="font-semibold">@item.Title</h4>
+                        <p class="text-sm text-gray-600">URL: @item.Url</p>
+                        <p class="text-sm text-gray-600">Category: @item.Category</p>
+                        <p class="text-sm text-gray-600">Order: @item.Order</p>
+                        <p class="text-sm text-gray-600">Active: @(item.IsActive ? "Yes" : "No")</p>
+                        @if (item.RequiredRoles?.Any() == true)
+                        {
+                            <p class="text-sm text-gray-600">Roles: @string.Join(", ", item.RequiredRoles)</p>
+                        }
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <p class="text-gray-500">No navigation items found.</p>
+        }
+    </div>
+    
+    <div class="mt-8 flex space-x-4">
+        <a href="@Url.Action("TestRoles", "Diagnostics", new { area = "Admin" })" 
+           class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+            Test Roles
+        </a>
+        
+        <form asp-action="ClearCache" asp-controller="Diagnostics" asp-area="Admin" method="post" class="inline">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="bg-orange-600 text-white px-4 py-2 rounded hover:bg-orange-700">
+                Clear Cache
+            </button>
+        </form>
+        
+        <a href="@Url.Action("GetNavigationJson", "Diagnostics", new { area = "Admin" })" 
+           target="_blank"
+           class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+            View JSON
+        </a>
+    </div>
+</div> 

@@ -1,0 +1,197 @@
+@{
+    ViewData["Title"] = "Home";
+}
+
+<div class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="micfx-nav">
+        <div class="micfx-container">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-4">
+                    <h1 class="text-xl font-bold text-micfx-600">MicFx</h1>
+                    <nav class="hidden md:flex space-x-1">
+                        <a href="/" class="micfx-nav-item-active">Home</a>
+                        <a href="/hello-world" class="micfx-nav-item">Hello World Module</a>
+                        <a href="/hello-world/info" class="micfx-nav-item">Module Info</a>
+                    </nav>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button class="micfx-button-secondary">Login</button>
+                    <button class="micfx-button-primary">Sign Up</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1">
+        <div class="micfx-container py-8">
+            <div class="space-y-8">
+                <!-- Hero Section -->
+                <div class="text-center py-12">
+                    <h1 class="text-4xl font-bold text-gray-900 mb-4">
+                        Welcome to <span class="text-micfx-600">MicFx</span>
+                    </h1>
+                    <p class="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+                        A modular enterprise framework built on ASP.NET Core 8, designed for scalable and maintainable applications with powerful plugin architecture.
+                    </p>
+                    <div class="flex justify-center space-x-4">
+                        <a href="/hello-world" class="micfx-button-primary">Try Hello World Module</a>
+                        <a href="#modules" class="micfx-button-secondary">View Modules</a>
+                    </div>
+                </div>
+
+                <!-- Features Section -->
+                <div class="grid md:grid-cols-3 gap-6" id="features">
+                    <div class="micfx-card">
+                        <div class="text-micfx-600 mb-4">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Modular Architecture</h3>
+                        <p class="text-gray-600">Build applications with independent, reusable modules that can be developed and deployed separately.</p>
+                    </div>
+
+                    <div class="micfx-card">
+                        <div class="text-micfx-600 mb-4">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Dynamic Loading</h3>
+                        <p class="text-gray-600">Modules are loaded dynamically at runtime, enabling flexible plugin-based architecture.</p>
+                    </div>
+
+                    <div class="micfx-card">
+                        <div class="text-micfx-600 mb-4">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">TailwindCSS Integration</h3>
+                        <p class="text-gray-600">Built-in TailwindCSS support with custom MicFx components for consistent styling across all modules.</p>
+                    </div>
+                </div>
+
+                <!-- Modules Section -->
+                <div id="modules">
+                    <div class="micfx-module-header">
+                        <h2 class="micfx-module-title">Available Modules</h2>
+                        <p class="micfx-module-description">Explore the modules currently loaded in this MicFx instance.</p>
+                    </div>
+
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="micfx-card">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-semibold text-gray-900">HelloWorld Module</h3>
+                                <span class="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">Active</span>
+                            </div>
+                            <p class="text-gray-600 mb-4">A simple demonstration module showing basic MicFx functionality with TailwindCSS integration.</p>
+                            <div class="flex space-x-2">
+                                <a href="/hello-world" class="micfx-button-primary text-sm">View Module</a>
+                                <a href="/hello-world/api" class="micfx-button-secondary text-sm">API Endpoint</a>
+                                <a href="/hello-world/info" class="micfx-button-secondary text-sm">Module Info</a>
+                            </div>
+                        </div>
+
+                        <div class="micfx-card opacity-60">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-semibold text-gray-900">Auth Module</h3>
+                                <span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">Coming Soon</span>
+                            </div>
+                            <p class="text-gray-600 mb-4">Authentication and authorization module with SSO support.</p>
+                            <div class="flex space-x-2">
+                                <button class="micfx-button-secondary text-sm" disabled>Coming Soon</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TailwindCSS Demo Section -->
+                <div class="micfx-card bg-micfx-50 border-micfx-200">
+                    <h3 class="text-lg font-semibold text-micfx-600 mb-4">TailwindCSS Components Demo</h3>
+                    <p class="text-gray-700 mb-6">All modules can use these pre-built MicFx components for consistent styling:</p>
+                    
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="font-semibold text-gray-900 mb-3">Buttons</h4>
+                            <div class="space-y-2">
+                                <button class="micfx-button-primary w-full">Primary Button</button>
+                                <button class="micfx-button-secondary w-full">Secondary Button</button>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h4 class="font-semibold text-gray-900 mb-3">Form Elements</h4>
+                            <div class="space-y-2">
+                                <input type="text" class="micfx-input" placeholder="MicFx Input Component" />
+                                <select class="micfx-input">
+                                    <option>Select Option</option>
+                                    <option>Option 1</option>
+                                    <option>Option 2</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6">
+                        <h4 class="font-semibold text-gray-900 mb-3">Color Palette</h4>
+                        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                            <div class="text-center">
+                                <div class="w-12 h-12 bg-micfx-500 rounded-lg mx-auto mb-2"></div>
+                                <p class="text-sm text-gray-700">Primary</p>
+                            </div>
+                            <div class="text-center">
+                                <div class="w-12 h-12 bg-micfx-600 rounded-lg mx-auto mb-2"></div>
+                                <p class="text-sm text-gray-700">Primary 600</p>
+                            </div>
+                            <div class="text-center">
+                                <div class="w-12 h-12 bg-micfx-700 rounded-lg mx-auto mb-2"></div>
+                                <p class="text-sm text-gray-700">Primary 700</p>
+                            </div>
+                            <div class="text-center">
+                                <div class="w-12 h-12 bg-green-500 rounded-lg mx-auto mb-2"></div>
+                                <p class="text-sm text-gray-700">Success</p>
+                            </div>
+                            <div class="text-center">
+                                <div class="w-12 h-12 bg-red-500 rounded-lg mx-auto mb-2"></div>
+                                <p class="text-sm text-gray-700">Error</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Getting Started Section -->
+                <div class="micfx-card">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Getting Started</h3>
+                    <p class="text-gray-600 mb-4">Ready to create your own module? Follow these simple steps:</p>
+                    <ol class="list-decimal list-inside space-y-2 text-gray-600">
+                        <li>Create a new folder in <code class="bg-gray-200 px-2 py-1 rounded text-sm">src/Modules/MicFx.Modules.YourModule/</code></li>
+                        <li>Implement the <code class="bg-gray-200 px-2 py-1 rounded text-sm">IMicFxModule</code> interface</li>
+                        <li>Use TailwindCSS classes and MicFx components for styling</li>
+                        <li>Add project reference to the host application</li>
+                        <li>Build and test your module endpoints</li>
+                    </ol>
+                    <div class="mt-4">
+                        <a href="#" class="micfx-button-primary">View Documentation</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-auto">
+        <div class="micfx-container py-6">
+            <div class="flex justify-between items-center">
+                <p class="text-gray-600">&copy; 2024 MicFx Framework. All rights reserved.</p>
+                <div class="flex space-x-4">
+                    <a href="#" class="text-gray-600 hover:text-micfx-600">Documentation</a>
+                    <a href="#" class="text-gray-600 hover:text-micfx-600">GitHub</a>
+                    <a href="#" class="text-gray-600 hover:text-micfx-600">Support</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+</div> 

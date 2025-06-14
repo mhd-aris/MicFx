@@ -1,0 +1,77 @@
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+    content: [
+      "./Views/**/*.{html,cshtml}",
+      "./Areas/**/*.{html,cshtml}",
+      "./wwwroot/**/*.{html,js}",
+      "../Modules/**/*.{html,cshtml,js}",
+      "../Modules/**/Views/**/*.{html,cshtml}",
+      "../Modules/**/Views/**/**/*.{html,cshtml}",
+      "../Modules/**/Areas/**/*.{html,cshtml}",
+      "../Modules/**/wwwroot/**/*.{html,js}",
+    ],
+    safelist: [
+      'bg-gradient-to-br',
+      'bg-gradient-to-r', 
+      'bg-gradient-to-l',
+      'from-slate-50',
+      'from-blue-50',
+      'from-indigo-50',
+      'from-emerald-50',
+      'from-green-50',
+      'from-teal-50',
+      'from-purple-50',
+      'from-pink-50',
+      'from-amber-50',
+      'from-orange-50',
+      'from-red-50',
+      'via-blue-50',
+      'via-purple-600',
+      'via-green-500',
+      'via-blue-600',
+      'to-indigo-100',
+      'to-blue-100',
+      'to-teal-100',
+      'to-green-100',
+      'bg-clip-text',
+      'text-transparent',
+      'animate-pulse',
+      'animate-bounce',
+      'transform',
+      'hover:scale-105',
+      'hover:scale-110',
+      'transition-all',
+      'duration-300',
+      'group/item',
+      'group/link',
+      'group-hover/item:scale-110',
+      'group-hover/link:translate-x-1',
+      'focus:ring-4',
+      'focus:ring-blue-200',
+      'rounded-3xl',
+      'shadow-2xl'
+    ],
+    theme: {
+      extend: {
+        colors: {
+          'micfx': {
+            50: '#f0f9ff',
+            100: '#e0f2fe',
+            200: '#bae6fd',
+            300: '#7dd3fc',
+            400: '#38bdf8',
+            500: '#0ea5e9',
+            600: '#0284c7',
+            700: '#0369a1',
+            800: '#075985',
+            900: '#0c4a6e',
+          }
+        },
+        fontFamily: {
+          'inter': ['Inter', 'sans-serif'],
+        }
+      },
+    },
+    plugins: [],
+  }
+  
