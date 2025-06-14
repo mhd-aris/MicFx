@@ -1,14 +1,14 @@
-# 🌐 MicFx.Mvc.Web - Host Application
+# 🌐 MicFx.Web - Host Application
 
 ## 🎯 **Overview**
 
-MicFx.Mvc.Web adalah **host application** untuk MicFx Framework - sebuah modular ASP.NET Core framework yang mengimplementasikan clean architecture dengan zero-configuration development. Aplikasi ini berfungsi sebagai entry point dan orchestrator untuk semua module dalam ecosystem MicFx.
+MicFx.Web adalah **host application** untuk MicFx Framework - sebuah modular ASP.NET Core framework yang mengimplementasikan clean architecture dengan zero-configuration development. Aplikasi ini berfungsi sebagai entry point dan orchestrator untuk semua module dalam ecosystem MicFx.
 
 ## 🏗️ **Architecture**
 
 ### **Layer Structure**
 ```
-📦 MicFx.Mvc.Web (Host Application)
+📦 MicFx.Web (Host Application)
 ├── 🚀 Program.cs                 # Application entry point & configuration
 ├── ⚙️ appsettings.json          # Configuration management
 ├── 🎛️ Admin/                    # Admin panel system
@@ -41,7 +41,7 @@ MicFx.Mvc.Web adalah **host application** untuk MicFx Framework - sebuah modular
 1. **Clone dan Setup**
    ```bash
    git clone <repository-url>
-   cd src/MicFx.Mvc.Web
+   cd src/MicFx.Web
    ```
 
 2. **Configure Database** (Optional)
@@ -168,7 +168,7 @@ export MICFX_Auth__DefaultAdmin__Password="your-admin-password"
 
 ### **Project Structure**
 ```
-src/MicFx.Mvc.Web/
+src/MicFx.Web/
 ├── Program.cs                 # ✅ Application entry point
 ├── appsettings.json          # ✅ Main configuration
 ├── Admin/                    # ✅ Admin panel system
@@ -369,4 +369,4 @@ dotnet test --collect:"XPlat Code Coverage"
 
 ---
 
-*MicFx.Mvc.Web adalah host application yang robust dan production-ready untuk framework modular MicFx. Dengan comprehensive admin panel, sophisticated module system, dan excellent developer experience.* 
+*MicFx.Web adalah host application yang robust dan production-ready untuk framework modular MicFx. Dengan comprehensive admin panel, sophisticated module system, dan excellent developer experience.* 

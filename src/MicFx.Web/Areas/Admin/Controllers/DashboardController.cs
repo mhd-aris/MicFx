@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MicFx.Mvc.Web.Admin.Services;
+using MicFx.Web.Admin.Services;
 
-namespace MicFx.Mvc.Web.Areas.Admin.Controllers;
+namespace MicFx.Web.Areas.Admin.Controllers;
 
 [Area("Admin")]
 [Route("admin")]

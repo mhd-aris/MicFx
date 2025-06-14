@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace MicFx.Mvc.Web.Controllers
+namespace MicFx.Web.Controllers
 {
     public class HomeController : Controller
     {

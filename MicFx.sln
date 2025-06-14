@@ -5,7 +5,7 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{827E0CD3-B72D-47B6-A68D-7590B98EB39B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MicFx.Mvc.Web", "src\MicFx.Mvc.Web\MicFx.Mvc.Web.csproj", "{4FC968E0-EDBC-4445-A3F2-FDFC5E43F826}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MicFx.Web", "src\MicFx.Web\MicFx.Web.csproj", "{4FC968E0-EDBC-4445-A3F2-FDFC5E43F826}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MicFx.SharedKernel", "src\MicFx.SharedKernel\MicFx.SharedKernel.csproj", "{F9AFB72E-F190-49A3-B1E8-4F95CC17AE89}"
 EndProject

@@ -13,7 +13,7 @@ public class AuthDbContextFactory : IDesignTimeDbContextFactory<AuthDbContext>
     {
         // Build configuration
         var configuration = new ConfigurationBuilder()
-            .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "MicFx.Mvc.Web"))
+            .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "MicFx.Web"))
             .AddJsonFile("appsettings.json", optional: false)
             .AddJsonFile("appsettings.Development.json", optional: true)
             .Build();

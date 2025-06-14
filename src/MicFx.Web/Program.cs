@@ -6,8 +6,8 @@ using MicFx.Infrastructure.Logging;
 using MicFx.Infrastructure.Extensions;
 using MicFx.Abstractions.Extensions;
 using MicFx.Core.Extensions;
-using MicFx.Mvc.Web.Infrastructure;
-using MicFx.Mvc.Web.Admin.Extensions;
+using MicFx.Web.Infrastructure;
+using MicFx.Web.Admin.Extensions;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -37,7 +37,7 @@ builder.Services.AddControllersWithViews()
 
 // 📁 Configure module view resolution
 var contentRoot = builder.Environment.ContentRootPath;
-var moduleRoot = Path.Combine(contentRoot, "..", "Modules"); // Go up one level from src/MicFx.Mvc.Web to src/Modules
+var moduleRoot = Path.Combine(contentRoot, "..", "Modules"); // Go up one level from src/MicFx.Web to src/Modules
 
 if (Directory.Exists(moduleRoot))
 {

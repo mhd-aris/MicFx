@@ -582,8 +582,8 @@ public async Task<IActionResult> Create(CreateModel model)
 "Serilog": {
   "MinimumLevel": {
     "Override": {
-      "MicFx.Mvc.Web.Admin.Services.AdminNavDiscoveryService": "Debug",
-      "MicFx.Mvc.Web.Admin.Services.AdminModuleScanner": "Debug"
+      "MicFx.Web.Admin.Services.AdminNavDiscoveryService": "Debug",
+      "MicFx.Web.Admin.Services.AdminModuleScanner": "Debug"
     }
   }
 }

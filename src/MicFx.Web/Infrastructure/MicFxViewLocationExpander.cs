@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace MicFx.Mvc.Web.Infrastructure;
+namespace MicFx.Web.Infrastructure;
 
 /// <summary>
 /// Custom view location expander for MicFx Framework

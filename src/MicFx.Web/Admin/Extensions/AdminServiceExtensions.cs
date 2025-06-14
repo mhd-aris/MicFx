@@ -1,9 +1,9 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using MicFx.Mvc.Web.Admin.Services;
+using MicFx.Web.Admin.Services;
 using MicFx.SharedKernel.Interfaces;
 
-namespace MicFx.Mvc.Web.Admin.Extensions
+namespace MicFx.Web.Admin.Extensions
 {
     /// <summary>
     /// Extension methods for registering admin services

@@ -5,7 +5,7 @@ using Microsoft.Extensions.Caching.Memory;
 using MicFx.SharedKernel.Interfaces;
 using System.Security.Claims;
 
-namespace MicFx.Mvc.Web.Admin.Services
+namespace MicFx.Web.Admin.Services
 {
     /// <summary>
     /// Service for discovering and managing admin navigation items from modules

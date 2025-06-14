@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using MicFx.Mvc.Web.Admin.Services;
+using MicFx.Web.Admin.Services;
 using MicFx.SharedKernel.Interfaces;
 using System.Security.Claims;
 
-namespace MicFx.Mvc.Web.Areas.Admin.Controllers
+namespace MicFx.Web.Areas.Admin.Controllers
 {
     /// <summary>
     /// Diagnostics controller for admin navigation system testing and validation

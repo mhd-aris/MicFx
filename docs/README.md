@@ -36,7 +36,7 @@ Framework ini menggunakan layered architecture dengan separation of concerns yan
 
 ```
 📦 MicFx Framework
-├── 🌐 MicFx.Mvc.Web           # Host Application
+├── 🌐 MicFx.Web           # Host Application
 ├── ⚙️ MicFx.Core              # Framework Core  
 ├── 🏗️ MicFx.Infrastructure   # Infrastructure Implementation
 ├── 📋 MicFx.Abstractions      # Contracts & Interfaces

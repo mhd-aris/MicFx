@@ -8,7 +8,7 @@ MicFx menggunakan **Clean Architecture** dengan **Modular Monolith** pattern yan
 
 ```
 ┌─────────────────────────────────────┐
-│        MicFx.Mvc.Web                │ ← Presentation Layer
+│        MicFx.Web                │ ← Presentation Layer
 │        ├── Program.cs               │   - Application startup
 │        ├── appsettings.json         │   - Configuration
 │        └── Infrastructure/          │   - View resolution
@@ -227,5 +227,3 @@ Runtime Usage
 - **Caching**: Distributed caching layer
 
 ---
-
-*Architecture ini dirancang untuk growth dan maintainability jangka panjang.* 

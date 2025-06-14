@@ -390,7 +390,7 @@ MicFx__Auth__Password__RequiredLength="12"
 1. Clone repository
 2. Install dependencies: `dotnet restore`
 3. Configure `appsettings.json` dengan connection string yang valid
-4. Run application: `dotnet run --project src/MicFx.Mvc.Web`
+4. Run application: `dotnet run --project src/MixFc.Web`
 5. Access admin panel: `/admin` (login dengan `admin@micfx.dev` / `Admin123!`)
 
 ### Code Standards

@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MicFx.SharedKernel.Interfaces;
 
-namespace MicFx.Mvc.Web.Admin.Services
+namespace MicFx.Web.Admin.Services
 {
     /// <summary>
     /// Service for automatically discovering and registering admin navigation contributors from modules
@@ -72,7 +72,7 @@ namespace MicFx.Mvc.Web.Admin.Services
                 // Include MicFx module assemblies
                 if (assemblyName != null && (
                     assemblyName.StartsWith("MicFx.Modules.", StringComparison.OrdinalIgnoreCase) ||
-                    assemblyName.StartsWith("MicFx.Mvc.Web", StringComparison.OrdinalIgnoreCase)))
+                    assemblyName.StartsWith("MicFx.Web", StringComparison.OrdinalIgnoreCase)))
                 {
                     assemblies.Add(assembly);
                     _logger.LogDebug("📦 Found MicFx module assembly: {AssemblyName}", assemblyName);
