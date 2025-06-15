@@ -1,97 +1,377 @@
-# 🌐 MicFx.Web - Host Application
+# 🌐 MicFx.Web - Host Application & Admin Panel
 
-## 🎯 **Overview**
+## 🎯 **Peran dalam Arsitektur**
 
-MicFx.Web adalah **host application** untuk MicFx Framework - sebuah modular ASP.NET Core framework yang mengimplementasikan clean architecture dengan zero-configuration development. Aplikasi ini berfungsi sebagai entry point dan orchestrator untuk semua module dalam ecosystem MicFx.
+**MicFx.Web** adalah **Host Application** dalam arsitektur MicFx Framework yang berfungsi sebagai:
 
-## 🏗️ **Architecture**
+- **Application Entry Point**: Bootstrap dan orchestration untuk seluruh framework
+- **Module Host**: Auto-discovery dan lifecycle management untuk semua modules
+- **Admin Panel System**: Comprehensive admin interface dengan real-time monitoring
+- **Infrastructure Orchestrator**: Setup logging, exception handling, dan middleware pipeline
+- **View Resolution Engine**: Sophisticated view location expansion untuk modular views
+- **Security Gateway**: Authentication, authorization, dan security policy management
 
-### **Layer Structure**
+## 🏗️ **Prinsip Design**
+
+### **1. Zero-Configuration Hosting**
+```csharp
+// ✅ Auto-discovery dan setup tanpa manual configuration
+var builder = WebApplication.CreateBuilder(args);
+
+// Framework auto-discovers dan registers semua modules
+builder.Services.AddMicFxModulesWithDependencyManagement();
+
+// Admin system auto-discovers navigation contributors
+builder.Services.AddAdminNavigation();
 ```
-📦 MicFx.Web (Host Application)
-├── 🚀 Program.cs                 # Application entry point & configuration
-├── ⚙️ appsettings.json          # Configuration management
-├── 🎛️ Admin/                    # Admin panel system
-│   ├── Services/                # Admin navigation & module discovery
-│   ├── Extensions/              # DI extensions for admin features
-│   └── Navigation/              # Navigation system components
-├── 🏢 Areas/                    # MVC Areas (Admin interface)
-│   └── Admin/                   # Admin area controllers & views
-├── 🔧 Infrastructure/           # View resolution & framework infrastructure
-├── 📄 Views/                    # Shared views & layouts
-└── 🌐 wwwroot/                  # Static assets & resources
+
+### **2. Modular View Resolution**
+```csharp
+// ✅ Sophisticated view resolution untuk modular architecture
+public class MicFxViewLocationExpander : IViewLocationExpander
+{
+    // Auto-detects module dari controller dan resolves views
+    // Supports MVC, Admin, dan API controller patterns
+    // Provides fallback mechanisms untuk backward compatibility
+}
 ```
 
-### **Responsibilities**
-- **Module Orchestration**: Auto-discovery dan lifecycle management untuk semua modules
-- **Infrastructure Setup**: Konfigurasi logging, exception handling, dan middleware pipeline
-- **Admin Interface**: Comprehensive admin panel dengan real-time monitoring
-- **View Resolution**: Sophisticated view location expansion untuk modular views
-- **Security Management**: Authentication, authorization, dan security policies
+### **3. Admin Panel Auto-Discovery**
+```csharp
+// ✅ Modules contribute navigation secara otomatis
+public class HelloWorldAdminNavContributor : IAdminNavContributor
+{
+    public IEnumerable<AdminNavItem> GetNavItems()
+    {
+        return new[]
+        {
+            new AdminNavItem
+            {
+                Title = "Hello World",
+                Url = "/admin/helloworld",
+                Category = "Modules",
+                RequiredRoles = new[] { "Admin" }
+            }
+        };
+    }
+}
+```
 
-## 🚀 **Quick Start**
+## 📁 **Struktur Komponen**
 
-### **Prerequisites**
-- .NET 8.0 SDK atau lebih baru
-- Visual Studio 2022 atau VS Code
-- SQL Server (LocalDB atau full instance)
+### **🚀 Application Bootstrap**
+```
+Program.cs                           # Application entry point & configuration
+├── Serilog Configuration           # Structured logging setup
+├── Module Discovery                # Auto-discovery & lifecycle management
+├── Admin Panel Setup              # Navigation & diagnostics system
+├── Security Configuration         # Authentication & authorization
+└── Middleware Pipeline            # Request processing pipeline
+```
+
+**Peran**: Application initialization dan configuration
+- **Environment-Aware Setup**: Different configurations untuk dev/prod
+- **Module Auto-Discovery**: Automatic module loading dan registration
+- **Infrastructure Integration**: Logging, caching, security setup
+- **Health Monitoring**: Built-in health checks untuk modules
+
+### **🎛️ Admin Panel System**
+```
+Admin/
+├── Services/
+│   ├── AdminNavDiscoveryService.cs    # Navigation auto-discovery dengan caching
+│   ├── AdminModuleScanner.cs          # Module scanning & information gathering
+│   └── AdminServiceExtensions.cs     # DI registration untuk admin services
+└── Extensions/
+    └── AdminServiceExtensions.cs     # Service registration extensions
+```
+
+**Peran**: Comprehensive admin interface system
+- **Auto-Discovery Navigation**: Automatic navigation dari module contributors
+- **Module Monitoring**: Real-time module status dan information
+- **Role-Based Access**: Security-aware navigation filtering
+- **Performance Caching**: Efficient caching untuk navigation items
+
+### **🏢 Areas/Admin/** (Admin Interface)
+```
+Areas/Admin/
+├── Controllers/
+│   ├── DashboardController.cs         # Main admin dashboard
+│   └── DiagnosticsController.cs       # System diagnostics & testing
+├── Views/
+│   ├── Dashboard/Index.cshtml         # Beautiful admin dashboard
+│   ├── Diagnostics/Index.cshtml       # System diagnostics interface
+│   ├── Diagnostics/TestRoles.cshtml   # Role-based testing interface
+│   └── Shared/
+│       ├── _AdminLayout.cshtml        # Modern admin layout
+│       └── _AdminNavigation.cshtml    # Dynamic navigation component
+└── _ViewImports.cshtml                # Admin-specific imports
+```
+
+**Peran**: Modern admin interface dengan comprehensive features
+- **Real-Time Dashboard**: Live system statistics dan module information
+- **Module Diagnostics**: Comprehensive module information dan testing
+- **Role Testing**: Built-in role-based access testing
+- **Responsive Design**: Modern UI dengan Tailwind CSS
+
+### **🔧 Infrastructure/** (Framework Infrastructure)
+```
+Infrastructure/
+└── MicFxViewLocationExpander.cs      # Sophisticated view resolution engine
+```
+
+**Peran**: Advanced view resolution untuk modular architecture
+- **Multi-Pattern Support**: MVC, Admin, API controller patterns
+- **Assembly Analysis**: Intelligent module detection dari assemblies
+- **Fallback Mechanisms**: Comprehensive fallback untuk view resolution
+- **Performance Optimized**: Efficient view location caching
+
+### **🌐 Views/** (Shared Views)
+```
+Views/
+├── Home/Index.cshtml                  # Main application homepage
+├── Shared/
+│   ├── _Layout.cshtml                 # Main application layout
+│   └── Components/                    # Shared view components
+└── _ViewStart.cshtml                  # Global view configuration
+```
+
+**Peran**: Shared views dan layouts untuk main application
+- **Responsive Layouts**: Modern responsive design
+- **Component System**: Reusable view components
+- **Theme Support**: Consistent styling across application
+
+## 🎯 **Key Features Deep Dive**
+
+### **🚀 Application Bootstrap (Program.cs)**
+```csharp
+var builder = WebApplication.CreateBuilder(args);
+
+// 🔧 Serilog Configuration
+builder.Services.AddMicFxSerilog(builder.Configuration, builder.Environment, options =>
+{
+    options.MinimumLevel = builder.Environment.IsDevelopment() 
+        ? LogEventLevel.Debug 
+        : LogEventLevel.Information;
+    options.EnableRequestLogging = builder.Environment.IsDevelopment();
+});
+
+// 📦 Module Auto-Discovery
+builder.Services.AddMicFxModulesWithDependencyManagement();
+
+// 🎛️ Admin Panel Setup
+builder.Services.AddAdminNavigation();
+
+// 🔐 Security Configuration
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminAreaAccess", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.RequireRole("SuperAdmin", "Admin");
+    });
+});
+```
+
+**Features**:
+- **Environment-Aware Configuration**: Different settings untuk dev/prod
+- **Auto-Discovery**: Automatic module loading tanpa manual registration
+- **Security Policies**: Role-based access control
+- **Health Monitoring**: Built-in health checks
+
+### **🎛️ Admin Panel Dashboard**
+```csharp
+public class DashboardController : Controller
+{
+    public async Task<IActionResult> Index()
+    {
+        var scanResults = _moduleScanner.GetScanResults();
+        var navigationItems = await _navDiscoveryService.GetNavigationItemsAsync(HttpContext);
+        
+        var model = new DashboardViewModel
+        {
+            SystemInfo = new SystemInfoViewModel
+            {
+                ApplicationName = "MicFx Framework",
+                Version = "1.0.0",
+                Environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
+            },
+            ModuleInfo = new ModuleInfoViewModel
+            {
+                TotalModules = scanResults.ScannedAssemblies,
+                NavigationContributors = scanResults.Contributors.Count,
+                NavigationByCategory = navigationByCategory
+            }
+        };
+        
+        return View(model);
+    }
+}
+```
+
+**Features**:
+- **Real-Time Information**: Live system statistics dan module information
+- **Module Discovery**: Comprehensive module scanning dan analysis
+- **Navigation Management**: Auto-generated navigation dari modules
+- **Performance Metrics**: System performance monitoring
+
+### **🔍 Admin Diagnostics System**
+```csharp
+public class DiagnosticsController : Controller
+{
+    [HttpGet("test-roles")]
+    public async Task<IActionResult> TestRoles()
+    {
+        var testScenarios = new[]
+        {
+            new { Roles = new[] { "Admin" }, Description = "Admin User" },
+            new { Roles = new[] { "User" }, Description = "Regular User" },
+            new { Roles = new string[0], Description = "No Roles" }
+        };
+
+        foreach (var scenario in testScenarios)
+        {
+            var testUser = CreateTestUser(scenario.Roles);
+            var navItems = await _navDiscoveryService.GetNavigationItemsAsync(testContext);
+            // Test navigation visibility untuk different roles
+        }
+    }
+}
+```
+
+**Features**:
+- **Role-Based Testing**: Comprehensive testing untuk different user roles
+- **Navigation Analysis**: Detailed analysis navigation visibility
+- **System Information**: Complete system dan module information
+- **Cache Management**: Built-in cache clearing dan management
+
+### **🔧 Advanced View Resolution**
+```csharp
+public class MicFxViewLocationExpander : IViewLocationExpander
+{
+    public IEnumerable<string> ExpandViewLocations(ViewLocationExpanderContext context, IEnumerable<string> viewLocations)
+    {
+        var moduleName = ExtractModuleInformation(controllerName);
+        
+        // Module-specific view locations
+        var moduleLocations = new[]
+        {
+            $"~/Views/{{1}}/{{0}}.cshtml",                    // Primary module views
+            $"~/MicFx.Modules.{moduleName}/Views/{{1}}/{{0}}.cshtml", // Module-specific paths
+            $"~/Areas/Admin/Views/{{1}}/{{0}}.cshtml",        // Admin area views
+            $"~/Views/Shared/{{0}}.cshtml"                    // Shared views
+        };
+        
+        return moduleLocations.Concat(viewLocations);
+    }
+}
+```
+
+**Features**:
+- **Multi-Pattern Support**: MVC, Admin, API controller patterns
+- **Assembly Analysis**: Intelligent module detection
+- **Fallback Mechanisms**: Comprehensive view resolution fallbacks
+- **Performance Optimized**: Efficient location expansion
+
+## 🔄 **Integration Patterns**
+
+### **1. Module Integration Pattern**
+```csharp
+// Modules automatically discovered dan integrated
+// No manual registration required
+
+// Module contributes navigation
+public class HelloWorldAdminNavContributor : IAdminNavContributor
+{
+    public IEnumerable<AdminNavItem> GetNavItems()
+    {
+        return new[]
+        {
+            new AdminNavItem
+            {
+                Title = "Hello World",
+                Url = "/admin/helloworld",
+                Icon = "hello",
+                Category = "Modules",
+                Order = 100,
+                RequiredRoles = new[] { "Admin" }
+            }
+        };
+    }
+}
+
+// Module views automatically resolved
+// ~/MicFx.Modules.HelloWorld/Views/HelloWorld/Index.cshtml
+// ~/Areas/Admin/Views/HelloWorld/Index.cshtml
+```
+
+### **2. Admin Panel Integration Pattern**
+```csharp
+// Admin services auto-discovery
+builder.Services.AddAdminNavigation(enableAutoDiscovery: true);
+
+// Navigation automatically cached dan filtered by roles
+var navItems = await _navDiscoveryService.GetNavigationItemsAsync(HttpContext);
+
+// Role-based filtering applied automatically
+var filteredItems = navItems.Where(item => 
+    item.RequiredRoles?.Any(role => user.IsInRole(role)) ?? true);
+```
+
+### **3. Security Integration Pattern**
+```csharp
+// Security policies configured centrally
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminAreaAccess", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.RequireRole("SuperAdmin", "Admin");
+    });
+});
+
+// Admin area protected automatically
+app.MapControllerRoute(
+    name: "admin_area",
+    pattern: "admin/{controller=Dashboard}/{action=Index}/{id?}")
+    .RequireAuthorization("AdminAreaAccess");
+```
+
+## 🚀 **Usage Examples**
 
 ### **Running the Application**
+```bash
+# Development mode
+dotnet run --environment Development
 
-1. **Clone dan Setup**
-   ```bash
-   git clone <repository-url>
-   cd src/MicFx.Web
-   ```
+# Production mode
+dotnet run --environment Production
 
-2. **Configure Database** (Optional)
-   ```bash
-   # Edit appsettings.json connection string if needed
-   # Default menggunakan LocalDB
-   ```
-
-3. **Run Application**
-   ```bash
-   dotnet run
-   ```
-
-4. **Access Application**
-   - **Main App**: `http://localhost:5000`
-   - **Admin Panel**: `http://localhost:5000/admin`
-   - **API Docs**: `http://localhost:5000/api/docs` (Development only)
-   - **Health Checks**: `http://localhost:5000/health`
-
-## 🎛️ **Admin Panel Features**
-
-### **Dashboard** (`/admin`)
-- **Real-time System Information**: Clock, uptime, memory usage
-- **Module Statistics**: Loaded modules, navigation contributors
-- **Quick Actions**: Access to diagnostics, logs, dan configuration
-- **Navigation Discovery**: Auto-generated navigation dari semua modules
-
-### **Diagnostics** (`/admin/diagnostics`)
-- **Module Scanner**: Comprehensive module information
-- **Navigation Testing**: Role-based navigation testing
-- **System Health**: Real-time health monitoring
-- **Performance Metrics**: Response times dan system performance
-
-### **Available Endpoints**
-```
-🏠 Main Dashboard:        /admin
-🔍 System Diagnostics:    /admin/diagnostics
-🧪 Role Testing:          /admin/diagnostics/test-roles
-🩺 Health Checks:         /health
-📚 API Documentation:     /swagger (dev only)
+# With specific configuration
+dotnet run --urls "http://localhost:5000;https://localhost:5001"
 ```
 
-## ⚙️ **Configuration**
+### **Accessing Admin Panel**
+```bash
+# Main dashboard
+http://localhost:5000/admin
 
-### **appsettings.json Structure**
+# System diagnostics
+http://localhost:5000/admin/diagnostics
+
+# Role testing
+http://localhost:5000/admin/diagnostics/test-roles
+
+# Health checks
+http://localhost:5000/health
+
+# API documentation (development only)
+http://localhost:5000/api/docs
+```
+
+### **Configuration Examples**
 ```json
 {
-  "ConnectionStrings": {
-    "DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=micfx;Trusted_Connection=true;"
-  },
   "MicFx": {
     "ConfigurationManagement": {
       "AutoRegisterConfigurations": true,
@@ -104,19 +384,10 @@ MicFx.Web adalah **host application** untuk MicFx Framework - sebuah modular ASP
         "MaxGreetings": 25,
         "EnableLogging": true
       }
-    },
-    "Auth": {
-      "DefaultRoles": ["SuperAdmin", "Admin", "User"],
-      "Cookie": {
-        "ExpireTimeSpanHours": 2,
-        "CookieName": "MicFx.Auth"
-      }
     }
   },
   "Serilog": {
-    "MinimumLevel": {
-      "Default": "Information"
-    },
+    "MinimumLevel": "Information",
     "WriteTo": [
       { "Name": "Console" },
       { "Name": "File", "Args": { "path": "logs/micfx-.log" } }
@@ -125,248 +396,112 @@ MicFx.Web adalah **host application** untuk MicFx Framework - sebuah modular ASP
 }
 ```
 
-### **Environment-Specific Configuration**
-- **Development**: Debug logging, request logging, detailed errors
-- **Production**: Optimized logging, minimal error exposure, performance focused
+## 🔗 **Dependencies**
 
-### **Security Configuration**
-```bash
-# Use User Secrets for sensitive data (Development)
-dotnet user-secrets set "ConnectionStrings:DefaultConnection" "your-connection-string"
-dotnet user-secrets set "MicFx:Auth:DefaultAdmin:Password" "your-admin-password"
+### **Core Dependencies**
+- **MicFx.SharedKernel**: Common contracts dan utilities
+- **MicFx.Abstractions**: Interface definitions
+- **MicFx.Core**: Framework engine dan module management
+- **MicFx.Infrastructure**: Infrastructure implementations
 
-# Use Environment Variables for Production
-export MICFX_ConnectionStrings__DefaultConnection="your-connection-string"
-export MICFX_Auth__DefaultAdmin__Password="your-admin-password"
+### **Module Dependencies**
+- **MicFx.Modules.HelloWorld**: Demo module
+- **MicFx.Modules.Auth**: Authentication system
+
+### **External Dependencies**
+```xml
+<PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="8.0.4" />
 ```
 
-## 🧩 **Module Integration**
+## 📈 **Performance Considerations**
 
-### **How Modules are Loaded**
-1. **Auto-Discovery**: Framework scans `MicFx.Modules.*` assemblies
-2. **Dependency Resolution**: Automatic dependency resolution dan registration
-3. **Lifecycle Management**: Complete module lifecycle dengan initialization hooks
-4. **View Resolution**: Modular view resolution dengan intelligent path detection
+- **Module Caching**: Navigation items cached untuk 15 minutes
+- **View Compilation**: Runtime compilation enabled di development only
+- **Request Logging**: Disabled di production untuk performance
+- **Health Check Optimization**: Efficient health monitoring
+- **Memory Management**: Proper disposal patterns untuk resources
 
-### **Supported Module Patterns**
-```
-📦 Module Structure:
-├── 📂 Api/                    # JSON API Controllers → /api/{module-name}/*
-├── 📂 Controllers/            # MVC Controllers → /{module-name}/*
-├── 📂 Areas/Admin/            # Admin Controllers → /admin/{module-name}/*
-├── 📂 Views/                  # Razor Views
-├── 📂 Services/               # Business Logic
-├── Manifest.cs                # Module Metadata
-└── Startup.cs                 # Module Configuration
-```
+## 🎯 **Best Practices**
 
-### **Available Modules**
-- **MicFx.Modules.HelloWorld**: Demo module dengan comprehensive examples
-- **MicFx.Modules.Auth**: Authentication dan authorization system
+### **✅ DO**
+- Use environment-specific configuration untuk different environments
+- Implement proper error handling dalam admin controllers
+- Cache navigation items untuk better performance
+- Use role-based access control untuk security
+- Follow naming conventions untuk view resolution
+
+### **❌ DON'T**
+- Jangan hardcode configuration values
+- Jangan expose sensitive information dalam admin panel
+- Jangan ignore performance implications dari view resolution
+- Jangan bypass security policies
+- Jangan couple admin panel dengan specific module implementations
+
+## 🛡️ **Security Features**
+
+### **Authentication & Authorization**
+- **Cookie Authentication**: Secure cookie-based authentication
+- **Role-Based Access**: Admin area requires specific roles
+- **Policy-Based Authorization**: Flexible authorization policies
+- **Anti-Forgery Protection**: CSRF protection untuk forms
+
+### **Admin Panel Security**
+- **Role Filtering**: Navigation filtered by user roles
+- **Secure Endpoints**: All admin endpoints protected
+- **Audit Logging**: Comprehensive logging untuk admin actions
+- **Session Management**: Secure session handling
 
 ## 🔧 **Development Guide**
 
-### **Project Structure**
-```
-src/MicFx.Web/
-├── Program.cs                 # ✅ Application entry point
-├── appsettings.json          # ✅ Main configuration
-├── Admin/                    # ✅ Admin panel system
-│   ├── Services/             # Navigation discovery, module scanner
-│   └── Extensions/           # DI registration extensions
-├── Areas/Admin/              # ✅ Admin interface
-│   ├── Controllers/          # Dashboard, Diagnostics controllers
-│   └── Views/                # Admin views dan layouts
-├── Infrastructure/           # ✅ Framework infrastructure
-│   └── MicFxViewLocationExpander.cs # Sophisticated view resolution
-└── Views/                    # ✅ Shared views
-    └── Shared/               # Global layouts dan components
-```
-
-### **Key Components**
-
-#### **1. Program.cs - Application Bootstrap**
-- Serilog configuration dengan environment-aware settings
-- Module discovery dan lifecycle management
-- Middleware pipeline configuration
-- Security policies dan authorization setup
-
-#### **2. Admin System**
-- **AdminNavDiscoveryService**: Auto-discovery navigation dari modules
-- **AdminModuleScanner**: Comprehensive module information scanning
-- **Dashboard & Diagnostics**: Real-time monitoring dan debugging tools
-
-#### **3. View Resolution**
-- **MicFxViewLocationExpander**: Sophisticated view resolution untuk modular views
-- Support untuk multiple patterns (MVC, Admin, API)
-- Backward compatibility dengan legacy patterns
-
-### **Adding New Features**
-
-#### **1. Adding Admin Navigation**
+### **Adding New Admin Features**
 ```csharp
-// In your module
-public class YourModuleAdminNavContributor : IAdminNavContributor
+// 1. Create admin controller
+[Area("Admin")]
+[Route("admin/your-feature")]
+[Authorize(Policy = "AdminAreaAccess")]
+public class YourFeatureController : Controller
 {
-    public Task<IEnumerable<AdminNavItem>> GetNavigationItemsAsync(AdminNavContext context)
+    // Your admin functionality
+}
+
+// 2. Add navigation contributor
+public class YourFeatureNavContributor : IAdminNavContributor
+{
+    public IEnumerable<AdminNavItem> GetNavItems()
     {
-        return Task.FromResult<IEnumerable<AdminNavItem>>(new[]
+        return new[]
         {
             new AdminNavItem
             {
-                Title = "Your Module Admin",
-                Url = "/admin/your-module",
-                Icon = "settings",
-                Category = "Management",
-                Order = 100
+                Title = "Your Feature",
+                Url = "/admin/your-feature",
+                Category = "Custom",
+                RequiredRoles = new[] { "Admin" }
             }
-        });
+        };
     }
 }
+
+// 3. Register dalam module startup
+services.AddAdminNavContributor<YourFeatureNavContributor>();
 ```
 
-#### **2. Adding Health Checks**
+### **Customizing View Resolution**
 ```csharp
-// In Program.cs
+// Add custom view locations
+builder.Services.Configure<RazorViewEngineOptions>(options =>
+{
+    options.ViewLocationExpanders.Add(new CustomViewLocationExpander());
+});
+```
+
+### **Adding Health Checks**
+```csharp
+// Add custom health checks
 builder.Services.AddHealthChecks()
-    .AddCheck<YourCustomHealthCheck>("your-check");
+    .AddCheck<CustomHealthCheck>("custom-check");
 ```
-
-#### **3. Adding Custom Configuration**
-```csharp
-// In appsettings.json
-{
-  "MicFx": {
-    "Modules": {
-      "YourModule": {
-        "YourSetting": "value"
-      }
-    }
-  }
-}
-```
-
-## 🚨 **Troubleshooting**
-
-### **Common Issues**
-
-| Problem | Cause | Solution |
-|---------|-------|----------|
-| Module tidak load | Project reference missing | Add project reference di .csproj |
-| Admin navigation kosong | Navigation contributor not registered | Register IAdminNavContributor dalam module startup |
-| View tidak ditemukan | View location tidak sesuai convention | Check view location dan naming convention |
-| Database connection error | Connection string salah | Verify connection string di configuration |
-| Authorization error | Role tidak sesuai | Check user roles dan policy requirements |
-
-### **Debugging Tips**
-
-#### **1. Enable Debug Logging**
-```json
-{
-  "Serilog": {
-    "MinimumLevel": {
-      "Default": "Debug",
-      "Override": {
-        "MicFx": "Debug"
-      }
-    }
-  }
-}
-```
-
-#### **2. Check Module Loading**
-```bash
-# Check logs untuk module loading
-grep "Module.*loaded" logs/micfx-*.log
-```
-
-#### **3. Test Health Endpoints**
-```bash
-# Check application health
-curl http://localhost:5000/health
-
-# Check module-specific health
-curl http://localhost:5000/health/modules
-```
-
-#### **4. Admin Panel Diagnostics**
-- Access `/admin/diagnostics` untuk system information
-- Use `/admin/diagnostics/test-roles` untuk testing authorization
-
-## 📊 **Performance Considerations**
-
-### **Production Optimizations**
-- **Request Logging**: Disabled di production untuk performance
-- **Minimum Log Level**: Set ke Warning atau Error
-- **View Compilation**: Runtime compilation disabled di production
-- **Exception Details**: Minimized untuk security
-
-### **Memory Management**
-- **Module Caching**: Navigation items cached untuk 15 minutes
-- **View Caching**: Views cached setelah first compilation
-- **Health Check Caching**: Results cached untuk mengurangi overhead
-
-## 🛡️ **Security**
-
-### **Authentication & Authorization**
-- **Cookie Authentication**: Configured dengan secure defaults
-- **Role-Based Access**: Admin area requires Admin atau SuperAdmin role
-- **Anti-Forgery**: Enabled untuk semua POST operations
-- **HTTPS**: Enforced di production environments
-
-### **Security Best Practices**
-- **Sensitive Data**: Never store passwords atau secrets di appsettings.json
-- **Connection Strings**: Use User Secrets (dev) atau Environment Variables (prod)
-- **Error Handling**: Environment-aware error detail exposure
-- **Logging**: No sensitive data dalam logs
-
-## 🤝 **Contributing**
-
-### **Development Setup**
-1. Fork repository
-2. Create feature branch
-3. Setup development environment
-4. Run tests
-5. Submit pull request
-
-### **Code Standards**
-- Follow existing code style dan conventions
-- Add XML documentation untuk public APIs
-- Include unit tests untuk new features
-- Update documentation jika diperlukan
-
-### **Testing**
-```bash
-# Run tests
-dotnet test
-
-# Run with coverage
-dotnet test --collect:"XPlat Code Coverage"
-```
-
-## 📞 **Support**
-
-### **Resources**
-- **Documentation**: See `/docs` folder untuk comprehensive documentation
-- **Examples**: Check `MicFx.Modules.HelloWorld` untuk implementation examples
-- **Health Monitoring**: Use `/health` endpoints untuk application status
-
-### **Getting Help**
-- Check troubleshooting section di atas
-- Review application logs di `logs/` folder  
-- Use admin panel diagnostics untuk debugging
-- Check existing issues dalam repository
 
 ---
 
-## 🏷️ **Project Info**
-
-- **Framework**: ASP.NET Core 8.0
-- **Architecture**: Clean Architecture dengan Modular Monolith
-- **UI Framework**: Tailwind CSS
-- **Logging**: Serilog dengan structured logging
-- **Testing**: xUnit dengan comprehensive coverage
-
----
-
-*MicFx.Web adalah host application yang robust dan production-ready untuk framework modular MicFx. Dengan comprehensive admin panel, sophisticated module system, dan excellent developer experience.* 
+> **💡 Tip**: MicFx.Web adalah host application yang robust dan production-ready. Dengan comprehensive admin panel, sophisticated module system, dan excellent developer experience, aplikasi ini menyediakan foundation yang solid untuk enterprise applications. 
