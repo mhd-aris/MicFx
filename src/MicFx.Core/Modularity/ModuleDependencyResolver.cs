@@ -70,7 +70,7 @@ namespace MicFx.Core.Modularity
                         {
                             ModuleName = module.Name,
                             DependencyName = dependency,
-                            IsCritical = module.IsCritical
+                            IsCritical = module is IExtendedModuleManifest extendedManifest ? extendedManifest.IsCritical : false
                         });
                     }
                 }
@@ -118,7 +118,11 @@ namespace MicFx.Core.Modularity
 
             // Sort modules with same dependency level by priority
             var orderedResult = result
-                .Select((name, index) => new { Name = name, Index = index, Priority = _modules[name].Priority })
+                .Select((name, index) => new { 
+                    Name = name, 
+                    Index = index, 
+                    Priority = _modules[name] is IExtendedModuleManifest extendedManifest ? extendedManifest.Priority : 100 
+                })
                 .OrderBy(x => x.Index)
                 .ThenBy(x => x.Priority)
                 .Select(x => x.Name)
@@ -282,21 +286,24 @@ namespace MicFx.Core.Modularity
         {
             var conflicts = new List<VersionConflict>();
 
-            // Check framework version compatibility
+            // Check framework version compatibility only for extended manifests
             foreach (var module in _modules.Values)
             {
-                // Assuming framework version is available from somewhere
-                var frameworkVersion = "1.0.0"; // This should come from actual framework version
-
-                if (!IsVersionCompatible(frameworkVersion, module.MinimumFrameworkVersion, module.MaximumFrameworkVersion))
+                if (module is IExtendedModuleManifest extendedManifest)
                 {
-                    conflicts.Add(new VersionConflict
+                    // Assuming framework version is available from somewhere
+                    var frameworkVersion = "1.0.0"; // This should come from actual framework version
+
+                    if (!IsVersionCompatible(frameworkVersion, extendedManifest.MinimumFrameworkVersion, "99.0.0"))
                     {
-                        ModuleName = module.Name,
-                        RequiredVersion = $"{module.MinimumFrameworkVersion} - {module.MaximumFrameworkVersion}",
-                        ActualVersion = frameworkVersion,
-                        ConflictType = "Framework"
-                    });
+                        conflicts.Add(new VersionConflict
+                        {
+                            ModuleName = module.Name,
+                            RequiredVersion = $"{extendedManifest.MinimumFrameworkVersion}+",
+                            ActualVersion = frameworkVersion,
+                            ConflictType = "Framework"
+                        });
+                    }
                 }
             }
 
@@ -307,21 +314,9 @@ namespace MicFx.Core.Modularity
         {
             var conflicts = new List<ModuleConflict>();
 
-            foreach (var module in _modules.Values)
-            {
-                foreach (var conflictsWith in module.ConflictsWith)
-                {
-                    if (_modules.ContainsKey(conflictsWith))
-                    {
-                        conflicts.Add(new ModuleConflict
-                        {
-                            ModuleName = module.Name,
-                            ConflictingModuleName = conflictsWith,
-                            Reason = $"{module.Name} conflicts with {conflictsWith}"
-                        });
-                    }
-                }
-            }
+            // Module conflicts are no longer supported in simplified interface
+            // This method now returns empty list as conflicts are deprecated
+            _logger.LogDebug("Module conflict detection skipped - ConflictsWith property not available in simplified manifest");
 
             return conflicts;
         }

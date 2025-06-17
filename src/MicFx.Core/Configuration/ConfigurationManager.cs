@@ -174,25 +174,15 @@ public class MicFxConfigurationManager : IMicFxConfigurationManager
             {
                 try
                 {
-                    // Simpan nilai lama untuk event
-                    object? oldValue = null;
-                    if (configuration is IModuleConfiguration<object> typedConfig)
-                    {
-                        oldValue = typedConfig.Value;
-                    }
+                    // FIXED: Use proper interface method instead of dangerous reflection
+                    var oldValue = configuration.GetCurrentValueSnapshot();
+                    
+                    // Reload configuration
+                    configuration.Reload();
+                    
+                    var newValue = configuration.GetCurrentValueSnapshot();
 
-                    // Reload via reflection karena kita tidak tau type T
-                    var reloadMethod = configuration.GetType().GetMethod("Reload");
-                    reloadMethod?.Invoke(configuration, null);
-
-                    // Dapatkan nilai baru untuk event
-                    object? newValue = null;
-                    if (configuration is IModuleConfiguration<object> typedConfigAfter)
-                    {
-                        newValue = typedConfigAfter.Value;
-                    }
-
-                    // Trigger event jika ada perubahan
+                    // Trigger event if there are changes
                     if (!Equals(oldValue, newValue))
                     {
                         OnConfigurationChanged(new ConfigurationChangedEventArgs
@@ -200,22 +190,23 @@ public class MicFxConfigurationManager : IMicFxConfigurationManager
                             ModuleName = moduleName,
                             SectionName = configuration.SectionName,
                             OldValue = oldValue,
-                            NewValue = newValue
+                            NewValue = newValue,
+                            ChangedAt = DateTime.UtcNow
                         });
                     }
 
-                    _logger.LogDebug("Configuration reloaded for module {ModuleName}", moduleName);
+                    _logger.LogDebug("Configuration reloaded successfully for module {ModuleName}", moduleName);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error reloading configuration for module {ModuleName}", moduleName);
+                    _logger.LogError(ex, "Failed to reload configuration for module {ModuleName}", moduleName);
                 }
             }));
         }
 
         await Task.WhenAll(reloadTasks);
 
-        _logger.LogInformation("Configuration reload completed");
+        _logger.LogInformation("Configuration reload completed for all modules");
     }
 
     /// <summary>

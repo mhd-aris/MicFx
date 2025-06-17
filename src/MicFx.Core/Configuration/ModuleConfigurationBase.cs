@@ -157,4 +157,12 @@ public abstract class ModuleConfigurationBase<T> : IModuleConfiguration<T> where
         _logger.LogInformation("Reloading configuration for module {ModuleName}", ModuleName);
         LoadConfiguration();
     }
+
+    /// <summary>
+    /// Get current configuration value snapshot for change detection
+    /// </summary>
+    public virtual object? GetCurrentValueSnapshot()
+    {
+        return Value;
+    }
 }

@@ -130,32 +130,25 @@ namespace MicFx.Core.Modularity
 
             try
             {
-                // Set timeout
-                operationCts.CancelAfter(TimeSpan.FromSeconds(module.Manifest.StartupTimeoutSeconds));
+                // Set timeout - use default or get from hot reload manifest
+                var timeoutSeconds = 30; // Default timeout
+                if (module.Manifest is IHotReloadModuleManifest hotReloadManifest)
+                {
+                    timeoutSeconds = hotReloadManifest.StartupTimeoutSeconds;
+                }
+                
+                operationCts.CancelAfter(TimeSpan.FromSeconds(timeoutSeconds));
 
                 // Ensure dependencies are started first
                 await EnsureDependenciesStartedAsync(moduleName, operationCts.Token);
 
+                // SIMPLIFIED: Only two essential states - Loading and Started
                 await TransitionModuleStateAsync(moduleName, ModuleState.Loading, operationCts.Token);
 
-                // Call lifecycle hook if module implements it
+                // Single lifecycle hook - OnStartingAsync
                 if (module is IModuleLifecycle lifecycleModule)
                 {
-                    await lifecycleModule.OnLoadingAsync(operationCts.Token);
-                }
-
-                await TransitionModuleStateAsync(moduleName, ModuleState.Loaded, operationCts.Token);
-
-                if (module is IModuleLifecycle lifecycleModule2)
-                {
-                    await lifecycleModule2.OnLoadedAsync(operationCts.Token);
-                }
-
-                await TransitionModuleStateAsync(moduleName, ModuleState.Starting, operationCts.Token);
-
-                if (module is IModuleLifecycle lifecycleModule3)
-                {
-                    await lifecycleModule3.OnStartingAsync(operationCts.Token);
+                    await lifecycleModule.OnStartingAsync(operationCts.Token);
                 }
 
                 // Perform actual module startup
@@ -163,9 +156,10 @@ namespace MicFx.Core.Modularity
 
                 await TransitionModuleStateAsync(moduleName, ModuleState.Started, operationCts.Token);
 
-                if (module is IModuleLifecycle lifecycleModule4)
+                // Single post-start hook - OnStartedAsync
+                if (module is IModuleLifecycle lifecycleModulePost)
                 {
-                    await lifecycleModule4.OnStartedAsync(operationCts.Token);
+                    await lifecycleModulePost.OnStartedAsync(operationCts.Token);
                 }
 
                 _logger.LogInformation("Module {ModuleName} started successfully", moduleName);
@@ -173,8 +167,10 @@ namespace MicFx.Core.Modularity
             catch (OperationCanceledException) when (operationCts.Token.IsCancellationRequested)
             {
                 await TransitionModuleStateAsync(moduleName, ModuleState.Error, CancellationToken.None);
+                var timeoutSeconds = module.Manifest is IHotReloadModuleManifest hotReloadManifest ? 
+                    hotReloadManifest.StartupTimeoutSeconds : 30;
                 _logger.LogError("Module {ModuleName} startup timed out after {TimeoutSeconds} seconds",
-                    moduleName, module.Manifest.StartupTimeoutSeconds);
+                    moduleName, timeoutSeconds);
                 throw new ModuleException($"Module {moduleName} startup timed out", "LifecycleManager");
             }
             catch (Exception ex)
@@ -261,7 +257,9 @@ namespace MicFx.Core.Modularity
             }
 
             var module = _moduleInstances[moduleName];
-            if (!module.Manifest.SupportsHotReload)
+            
+            // Check if module supports hot reload
+            if (module.Manifest is not IHotReloadModuleManifest hotReloadManifest || !hotReloadManifest.SupportsHotReload)
             {
                 throw new ModuleException($"Module {moduleName} does not support hot reload", "LifecycleManager");
             }

@@ -27,6 +27,16 @@ public interface IModuleConfiguration
     /// Whether this configuration is required
     /// </summary>
     bool IsRequired { get; }
+
+    /// <summary>
+    /// Get current configuration value snapshot for change detection
+    /// </summary>
+    object? GetCurrentValueSnapshot();
+
+    /// <summary>
+    /// Reload configuration from source
+    /// </summary>
+    void Reload();
 }
 
 /// <summary>

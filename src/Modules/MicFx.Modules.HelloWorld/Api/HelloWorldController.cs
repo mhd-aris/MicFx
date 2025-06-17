@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using MicFx.SharedKernel.Common;
+using MicFx.SharedKernel.Modularity;
 using MicFx.Modules.HelloWorld.Domain;
 using MicFx.Modules.HelloWorld.Services;
 
@@ -105,7 +106,7 @@ public class HelloWorldController : ControllerBase
             manifest.Version,
             manifest.Description,
             manifest.Author,
-            manifest.Tags,
+            Tags = manifest is IExtendedModuleManifest extendedManifest ? extendedManifest.Tags : new string[0],
             manifest.Dependencies
         };
 
@@ -150,7 +151,7 @@ public class HelloWorldController : ControllerBase
                 manifest.Version,
                 manifest.Description,
                 manifest.Author,
-                manifest.Tags
+                Tags = manifest is IExtendedModuleManifest extendedManifest2 ? extendedManifest2.Tags : new string[0]
             },
             Statistics = statistics,
             Health = health,

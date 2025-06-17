@@ -16,7 +16,6 @@ namespace MicFx.Modules.Auth
         public override string[] Dependencies => new string[] { }; // Core framework dependencies handled automatically
         public override string[] OptionalDependencies => new string[] { }; // No optional dependencies
         public override string MinimumFrameworkVersion => "1.0.0";
-        public override string MaximumFrameworkVersion => "2.0.0";
         public override int Priority => 10; // High priority as security module
         public override bool IsCritical => true; // Critical for system security
 
@@ -30,32 +29,7 @@ namespace MicFx.Modules.Auth
             "identity",
             "security"
         };
-        public override string[] ConflictsWith => new string[] { }; // No conflicts
         public override string[] Tags => new string[] { "auth", "security", "identity", "core" };
-
-        public override string[] Controllers => new string[]
-        {
-            "AuthController",
-            "DashboardController",
-            "UserManagementController", 
-            "RoleManagementController"
-        };
-
-        public override string[] Views => new string[]
-        {
-            "Auth/Login",
-            "Auth/Register", 
-            "Auth/Profile",
-            "Auth/ChangePassword",
-            "Auth/AccessDenied",
-            "Dashboard/Index",
-            "UserManagement/Index",
-            "UserManagement/Details",
-            "UserManagement/Edit",
-            "RoleManagement/Index",
-            "RoleManagement/Details",
-            "RoleManagement/Edit"
-        };
 
         /// <summary>
         /// Database tables yang akan dibuat oleh module ini

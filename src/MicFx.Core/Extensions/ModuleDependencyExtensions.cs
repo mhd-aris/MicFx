@@ -69,29 +69,20 @@ namespace MicFx.Core.Extensions
             var moduleInstances = moduleDiscoveryResult.ModuleInstances;
             Log.Information("Discovered {ModuleCount} valid modules", moduleInstances.Count);
 
-            // FIXED: Create dependency resolver and lifecycle manager directly without temporary ServiceProvider
-            var dependencyResolver = CreateDependencyResolverDirectly();
-            var lifecycleManager = CreateLifecycleManagerPlaceholder();
+            // FIXED: Use proper DI registration instead of premature instantiation
+            // Register module types for lazy instantiation
+            services.AddSingleton<IModuleDiscoveryService>(sp => 
+                new ModuleDiscoveryService(moduleInstances));
 
-            // Register module instances to service collection
-            services.AddSingleton<IEnumerable<ModuleStartupBase>>(moduleInstances);
+            // Register dependency resolver as singleton
+            services.AddSingleton<ModuleDependencyResolver>();
 
-            // Register modules to dependency resolver and validate dependencies
-            var dependencyValidationResult = RegisterAndValidateModuleDependencies(
-                moduleInstances, dependencyResolver, lifecycleManager);
+            // Register lifecycle manager with proper DI
+            services.AddSingleton<ModuleLifecycleManager>();
 
-            if (!dependencyValidationResult.IsValid)
-            {
-                LogValidationErrors(dependencyValidationResult);
-                throw new InvalidOperationException("Module dependency validation failed. See logs for details.");
-            }
-
-            // Configure module services in correct dependency order
-            ConfigureModuleServicesInOrder(services, moduleInstances, dependencyResolver);
-
-            // Register configured dependency resolver and lifecycle manager to service collection
-            // for runtime usage (will be replaced by proper instances from DI)
-            services.AddSingleton(dependencyResolver);
+            // Configure module services using DI-friendly approach
+            services.AddSingleton<IModuleServiceConfigurator>(sp =>
+                new ModuleServiceConfigurator(moduleInstances, sp.GetRequiredService<ModuleDependencyResolver>()));
 
             return services;
         }
@@ -143,34 +134,69 @@ namespace MicFx.Core.Extensions
 
         /// <summary>
         /// Load module assemblies with optimization and caching
+        /// IMPROVED: Better performance with parallel loading and metadata caching
         /// </summary>
         private static void LoadModuleAssembliesOptimized()
         {
             var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
             var moduleFiles = Directory.GetFiles(baseDirectory, "MicFx.Modules.*.dll", SearchOption.AllDirectories);
 
-            var loadedCount = 0;
-            foreach (var file in moduleFiles)
+            if (!moduleFiles.Any())
             {
-                var fileName = Path.GetFileName(file);
-                if (_loadedAssemblies.TryAdd(fileName, true))
-                {
-                    try
-                    {
-                        System.Reflection.Assembly.LoadFrom(file);
-                        loadedCount++;
-                    }
-                    catch (Exception ex)
-                    {
-                        // Log but continue - some assemblies might not be loadable
-                        Log.Warning(ex, "Failed to load module assembly: {FileName}", fileName);
-                    }
-                }
+                Log.Information("No MicFx module assemblies found in {BaseDirectory}", baseDirectory);
+                return;
             }
 
-            if (loadedCount > 0)
+            // IMPROVED: Use parallel loading for better performance
+            var loadTasks = moduleFiles
+                .Where(file => !_loadedAssemblies.ContainsKey(Path.GetFileName(file)))
+                .Select(file => Task.Run(() => LoadAssemblyWithMetadata(file)))
+                .ToArray();
+
+            Task.WaitAll(loadTasks);
+
+            var successCount = loadTasks.Count(t => t.Result);
+            if (successCount > 0)
             {
-                Log.Information("Loaded {LoadedCount} module assemblies", loadedCount);
+                Log.Information("✅ Loaded {LoadedCount}/{TotalCount} module assemblies in parallel", 
+                    successCount, moduleFiles.Length);
+            }
+        }
+
+        /// <summary>
+        /// Load individual assembly with metadata validation
+        /// </summary>
+        private static bool LoadAssemblyWithMetadata(string filePath)
+        {
+            var fileName = Path.GetFileName(filePath);
+
+            if (!_loadedAssemblies.TryAdd(fileName, true))
+            {
+                return false; // Already loaded
+            }
+
+            try
+            {
+                // IMPROVED: Load with metadata validation
+                var assembly = System.Reflection.Assembly.LoadFrom(filePath);
+                
+                // Validate assembly has proper MicFx module structure
+                var hasModuleStartup = assembly.GetTypes()
+                    .Any(t => typeof(ModuleStartupBase).IsAssignableFrom(t) && !t.IsAbstract);
+
+                if (!hasModuleStartup)
+                {
+                    Log.Warning("Assembly {FileName} loaded but contains no valid module startup classes", fileName);
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                // Remove from cache if loading failed
+                _loadedAssemblies.TryRemove(fileName, out _);
+                Log.Warning(ex, "Failed to load module assembly: {FileName}", fileName);
+                return false;
             }
         }
 
@@ -272,100 +298,6 @@ namespace MicFx.Core.Extensions
         }
 
         /// <summary>
-        /// Create dependency resolver directly without DI for bootstrap phase
-        /// FIXED: Eliminate temporary ServiceProvider dependency
-        /// </summary>
-        private static ModuleDependencyResolver CreateDependencyResolverDirectly()
-        {
-            // Use a minimal logger for bootstrap phase to avoid temporary logger creation
-            using var loggerFactory = LoggerFactory.Create(builder => builder.SetMinimumLevel(LogLevel.Critical));
-            var logger = loggerFactory.CreateLogger<ModuleDependencyResolver>();
-            return new ModuleDependencyResolver(logger);
-        }
-
-        /// <summary>
-        /// Create placeholder lifecycle manager for bootstrap phase
-        /// FIXED: Avoid circular dependency with IServiceProvider
-        /// </summary>
-        private static BootstrapLifecycleManager CreateLifecycleManagerPlaceholder()
-        {
-            return new BootstrapLifecycleManager();
-        }
-
-        /// <summary>
-        /// Register and validate module dependencies without temporary ServiceProvider
-        /// FIXED: Direct dependency management without DI overhead
-        /// </summary>
-        private static ModuleDependencyValidationResult RegisterAndValidateModuleDependencies(
-            List<ModuleStartupBase> moduleInstances,
-            ModuleDependencyResolver dependencyResolver,
-            BootstrapLifecycleManager lifecycleManager)
-        {
-            // Register all modules with dependency resolver
-            foreach (var moduleInstance in moduleInstances)
-            {
-                try
-                {
-                    dependencyResolver.RegisterModule(moduleInstance.Manifest);
-                    lifecycleManager.RegisterModule(moduleInstance);
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, "Failed to register module {ModuleName}", moduleInstance.Manifest.Name);
-                    throw;
-                }
-            }
-
-            // Validate dependencies
-            var validationResult = dependencyResolver.ValidateDependencies();
-
-            if (validationResult.IsValid)
-            {
-                Log.Information("✅ All module dependencies validated successfully");
-            }
-            else
-            {
-                Log.Error("❌ Module dependency validation failed");
-            }
-
-            return validationResult;
-        }
-
-        /// <summary>
-        /// Configure module services in correct dependency order
-        /// IMPROVED: Better error handling and logging
-        /// </summary>
-        private static void ConfigureModuleServicesInOrder(
-            IServiceCollection services,
-            List<ModuleStartupBase> moduleInstances,
-            ModuleDependencyResolver dependencyResolver)
-        {
-            var startupOrder = dependencyResolver.GetStartupOrder();
-            Log.Information("Configuring services for {ModuleCount} modules", startupOrder.Count);
-
-            var configuredCount = 0;
-            foreach (var moduleName in startupOrder)
-            {
-                var moduleInstance = moduleInstances.FirstOrDefault(m => m.Manifest.Name == moduleName);
-                if (moduleInstance != null)
-                {
-                    try
-                    {
-                        moduleInstance.ConfigureServices(services);
-                        configuredCount++;
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error(ex, "Failed to configure services for module {ModuleName}", moduleName);
-                        throw new InvalidOperationException($"Failed to configure services for module {moduleName}", ex);
-                    }
-                }
-            }
-
-            Log.Information("✅ Successfully configured services for {ConfiguredCount} modules", configuredCount);
-        }
-
-        /// <summary>
         /// Configure module endpoints asynchronously with better performance
         /// </summary>
         private static async Task ConfigureModuleEndpointsAsync(
@@ -454,21 +386,6 @@ namespace MicFx.Core.Extensions
             public bool IsValid { get; set; }
             public List<ModuleStartupBase> ModuleInstances { get; set; } = new();
             public List<string> Errors { get; set; } = new();
-        }
-
-        /// <summary>
-        /// Bootstrap-only lifecycle manager for registration phase
-        /// FIXED: Eliminate dependency on IServiceProvider for bootstrap
-        /// </summary>
-        private class BootstrapLifecycleManager
-        {
-            private readonly ConcurrentDictionary<string, ModuleStartupBase> _moduleInstances = new();
-
-            public void RegisterModule(ModuleStartupBase moduleInstance)
-            {
-                var moduleName = moduleInstance.Manifest.Name;
-                _moduleInstances[moduleName] = moduleInstance;
-            }
         }
 
     }
@@ -578,6 +495,88 @@ namespace MicFx.Core.Extensions
                 Log.Error(ex, "Error checking module health");
                 return Task.FromResult(Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Unhealthy(
                     "Error checking module health", ex));
+            }
+        }
+    }
+
+    /// <summary>
+    /// Service for module discovery and management
+    /// </summary>
+    public interface IModuleDiscoveryService
+    {
+        IReadOnlyList<ModuleStartupBase> GetDiscoveredModules();
+        ModuleStartupBase? GetModule(string moduleName);
+    }
+
+    /// <summary>
+    /// Implementation of module discovery service
+    /// </summary>
+    public class ModuleDiscoveryService : IModuleDiscoveryService
+    {
+        private readonly IReadOnlyList<ModuleStartupBase> _modules;
+
+        public ModuleDiscoveryService(List<ModuleStartupBase> modules)
+        {
+            _modules = modules.AsReadOnly();
+        }
+
+        public IReadOnlyList<ModuleStartupBase> GetDiscoveredModules()
+        {
+            return _modules;
+        }
+
+        public ModuleStartupBase? GetModule(string moduleName)
+        {
+            return _modules.FirstOrDefault(m => m.Manifest.Name == moduleName);
+        }
+    }
+
+    /// <summary>
+    /// Service for configuring module services
+    /// </summary>
+    public interface IModuleServiceConfigurator
+    {
+        void ConfigureServices(IServiceCollection services);
+    }
+
+    /// <summary>
+    /// Implementation of module service configurator
+    /// </summary>
+    public class ModuleServiceConfigurator : IModuleServiceConfigurator
+    {
+        private readonly List<ModuleStartupBase> _moduleInstances;
+        private readonly ModuleDependencyResolver _dependencyResolver;
+
+        public ModuleServiceConfigurator(List<ModuleStartupBase> moduleInstances, ModuleDependencyResolver dependencyResolver)
+        {
+            _moduleInstances = moduleInstances;
+            _dependencyResolver = dependencyResolver;
+        }
+
+        public void ConfigureServices(IServiceCollection services)
+        {
+            // Register all modules with dependency resolver first
+            foreach (var moduleInstance in _moduleInstances)
+            {
+                _dependencyResolver.RegisterModule(moduleInstance.Manifest);
+            }
+
+            // Validate dependencies
+            var validationResult = _dependencyResolver.ValidateDependencies();
+            if (!validationResult.IsValid)
+            {
+                throw new InvalidOperationException("Module dependency validation failed. See logs for details.");
+            }
+
+            // Configure services in dependency order
+            var startupOrder = _dependencyResolver.GetStartupOrder();
+            foreach (var moduleName in startupOrder)
+            {
+                var moduleInstance = _moduleInstances.FirstOrDefault(m => m.Manifest.Name == moduleName);
+                if (moduleInstance != null)
+                {
+                    moduleInstance.ConfigureServices(services);
+                }
             }
         }
     }
