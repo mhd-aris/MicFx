@@ -9,6 +9,5 @@
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
-<!-- Infrastructure concerns like Swagger are handled by MicFx.Infrastructure -->
 
 </Project>
