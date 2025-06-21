@@ -7,8 +7,8 @@ namespace MicFx.Modules.HelloWorld.Controllers;
 
 /// <summary>
 /// HelloWorld MVC Controller - Web pages with Views
-/// Demonstrates MVC pattern with server-side rendering
-/// Uses auto-routing: /hello-world/hello-world/*
+/// Uses conventional routing: /helloworld/{action} from framework routing convention
+/// Routes handled by: /{module}/{controller}/{action}/{id?}
 /// </summary>
 public class HelloWorldController : Controller
 {
@@ -21,7 +21,7 @@ public class HelloWorldController : Controller
 
     /// <summary>
     /// HelloWorld home page showing module information
-    /// AUTO-ROUTE: GET /hello-world/hello-world (Index action)
+    /// ROUTE: GET /helloworld/helloworld (Index action)
     /// </summary>
     /// <returns>Home view with module information</returns>
     [HttpGet]
@@ -44,7 +44,7 @@ public class HelloWorldController : Controller
 
     /// <summary>
     /// Interactive demo page showing framework capabilities
-    /// AUTO-ROUTE: GET /hello-world/hello-world/demo
+    /// ROUTE: GET /helloworld/helloworld/demo
     /// </summary>
     /// <returns>Demo view with interactive features</returns>
     [HttpGet]
@@ -65,7 +65,7 @@ public class HelloWorldController : Controller
 
     /// <summary>
     /// About page showing module information
-    /// AUTO-ROUTE: GET /hello-world/hello-world/about
+    /// ROUTE: GET /helloworld/helloworld/about
     /// </summary>
     /// <returns>About view with module details</returns>
     [HttpGet]
@@ -86,7 +86,7 @@ public class HelloWorldController : Controller
 
     /// <summary>
     /// Create personalized greeting (MVC form handling)
-    /// AUTO-ROUTE: POST /hello-world/hello-world/greet
+    /// ROUTE: POST /helloworld/helloworld/creategreeting
     /// </summary>
     /// <param name="userName">User name from form</param>
     /// <returns>Personalized greeting view</returns>

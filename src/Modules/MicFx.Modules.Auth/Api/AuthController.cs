@@ -7,8 +7,8 @@ namespace MicFx.Modules.Auth.Api;
 
 /// <summary>
 /// Auth API Controller - Authentication and authorization endpoints
-/// Demonstrates pure API pattern with auto-routing
-/// Uses auto-routing: /api/auth/* (detected from Api folder)
+/// Uses attribute routing with [ApiController] and [Route] for precise control
+/// Routes: /api/auth/* (defined by [Route("api/auth")] attribute)
 /// </summary>
 [ApiController]
 [Route("api/auth")]
@@ -24,7 +24,7 @@ public class AuthController : ControllerBase
 
     /// <summary>
     /// User login endpoint
-    /// AUTO-ROUTE: POST /api/auth/login
+    /// ROUTE: POST /api/auth/login
     /// </summary>
     /// <param name="loginRequest">Login credentials</param>
     /// <returns>Authentication result</returns>
@@ -79,7 +79,7 @@ public class AuthController : ControllerBase
 
     /// <summary>
     /// User registration endpoint
-    /// AUTO-ROUTE: POST /api/auth/register
+    /// ROUTE: POST /api/auth/register
     /// </summary>
     /// <param name="registerRequest">Registration data</param>
     /// <returns>Registration result</returns>
@@ -136,7 +136,7 @@ public class AuthController : ControllerBase
 
     /// <summary>
     /// Get user profile
-    /// AUTO-ROUTE: GET /api/auth/profile/{id}
+    /// ROUTE: GET /api/auth/profile/{id}
     /// </summary>
     /// <param name="id">User ID</param>
     /// <returns>User profile information</returns>
@@ -179,7 +179,7 @@ public class AuthController : ControllerBase
 
     /// <summary>
     /// Logout endpoint
-    /// AUTO-ROUTE: POST /api/auth/logout
+    /// ROUTE: POST /api/auth/logout
     /// </summary>
     /// <returns>Logout confirmation</returns>
     [HttpPost("logout")]
