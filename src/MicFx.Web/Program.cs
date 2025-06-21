@@ -121,8 +121,8 @@ if (app.Environment.IsDevelopment())
 // 🛡️ Use MicFx Exception Handling (after Serilog request logging)
 app.UseMicFxExceptionHandling();
 
-// 4️⃣ Use modules with lifecycle management
-await app.UseMicFxModulesWithLifecycleManagementAsync();
+// 4️⃣ Use modules with simplified lifecycle management
+await app.UseMicFxModulesAsync();
 
 // 🩺 Add health check endpoints
 app.UseHealthChecks("/health");
