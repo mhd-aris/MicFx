@@ -3,7 +3,8 @@ using System.ComponentModel.DataAnnotations;
 namespace MicFx.SharedKernel.Common;
 
 /// <summary>
-/// Interface for centralized module configuration management
+/// Simplified interface for centralized module configuration management
+/// Removed complex monitoring and hot reload features for better maintainability
 /// </summary>
 public interface IMicFxConfigurationManager
 {
@@ -39,27 +40,4 @@ public interface IMicFxConfigurationManager
     /// </summary>
     /// <returns>Validation result with error list if any</returns>
     ValidationResult ValidateAllConfigurations();
-
-    /// <summary>
-    /// Reload configurations from configuration source
-    /// </summary>
-    /// <returns>Task indicating reload completion</returns>
-    Task ReloadConfigurationsAsync();
-
-    /// <summary>
-    /// Event triggered when configuration changes
-    /// </summary>
-    event EventHandler<ConfigurationChangedEventArgs>? ConfigurationChanged;
-}
-
-/// <summary>
-/// Event arguments for configuration changes
-/// </summary>
-public class ConfigurationChangedEventArgs : EventArgs
-{
-    public string ModuleName { get; set; } = string.Empty;
-    public string SectionName { get; set; } = string.Empty;
-    public object? OldValue { get; set; }
-    public object? NewValue { get; set; }
-    public DateTime ChangedAt { get; set; } = DateTime.UtcNow;
 }

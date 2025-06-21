@@ -63,15 +63,11 @@ builder.Services.Configure<RazorViewEngineOptions>(options =>
 });
 
 
-// 🔧 Add MicFx Configuration Management
+// 🔧 Add MicFx Configuration Management (Simplified)
 builder.Services.AddMicFxConfigurationManagement(builder.Configuration, options =>
 {
-    options.AutoRegisterConfigurations = true;
-    options.EnableConfigurationMonitoring = builder.Environment.IsDevelopment();
-    options.EnableChangeNotifications = true;
     options.ValidateOnStartup = true;
     options.ThrowOnValidationFailure = builder.Environment.IsDevelopment();
-    options.MonitoringIntervalMs = 30000; // 30 seconds
 });
 
 // 📦 Register MicFx Abstractions (interfaces available to modules)
