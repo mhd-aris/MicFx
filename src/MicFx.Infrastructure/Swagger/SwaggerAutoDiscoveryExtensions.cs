@@ -5,19 +5,19 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Reflection;
-using MicFx.SharedKernel.Modularity;
 using MicFx.SharedKernel.Common;
 
 namespace MicFx.Infrastructure.Swagger;
 
 /// <summary>
-/// Auto-discovery Swagger configuration for MicFx Framework
-/// Infrastructure layer yang independen dari Core
+/// Simplified Swagger configuration for MicFx Framework
+/// SIMPLIFIED: Removed over-engineered auto-discovery and routing type detection
 /// </summary>
 public static class SwaggerAutoDiscoveryExtensions
 {
     /// <summary>
-    /// Adds Swagger with auto-discovery endpoints from all modules
+    /// Adds Swagger with simplified configuration
+    /// SIMPLIFIED: Basic Swagger setup without complex auto-discovery
     /// </summary>
     public static IServiceCollection AddMicFxSwaggerInfrastructure(this IServiceCollection services)
     {
@@ -28,7 +28,7 @@ public static class SwaggerAutoDiscoveryExtensions
             {
                 Title = "MicFx Modular Framework API",
                 Version = "v1.0",
-                Description = "Enterprise modular framework with smart auto-routing for API, MVC, and Admin endpoints",
+                Description = "Enterprise modular framework with conventional routing",
                 Contact = new OpenApiContact
                 {
                     Name = "MicFx Framework",
@@ -36,55 +36,38 @@ public static class SwaggerAutoDiscoveryExtensions
                 }
             });
 
-            // Auto-discover and group by module with routing type
+            // Simple grouping by controller name without complex routing type detection
             options.TagActionsBy(api =>
             {
                 var controllerName = api.ActionDescriptor.RouteValues["controller"] ?? "Framework";
-                var routeTemplate = api.RelativePath ?? "";
-                
                 var moduleName = ExtractModuleFromController(controllerName);
-                var routingType = DetermineRoutingType(routeTemplate);
                 
-                return new[] { $"{moduleName} ({routingType})" };
+                return new[] { moduleName };
             });
 
-            // Group endpoints by module for better organization  
-            options.DocInclusionPredicate((docName, apiDesc) =>
-            {
-                // Include all endpoints for main documentation
-                return docName == "v1";
-            });
+            // Include all endpoints for main documentation
+            options.DocInclusionPredicate((docName, apiDesc) => docName == "v1");
 
-            // Auto-discovery all XML comments from MicFx assemblies
-            IncludeXmlCommentsAutoDiscovery(options);
+            // Simple XML comments inclusion
+            IncludeXmlCommentsFromCurrentAssembly(options);
 
             // Configure JWT security scheme
             ConfigureSecurityScheme(options);
 
-            // Custom operation IDs for better Swagger UI
+            // Simple operation IDs without complex routing detection
             options.CustomOperationIds(api =>
             {
                 var controllerName = api.ActionDescriptor.RouteValues["controller"] ?? "Framework";
                 var actionName = api.ActionDescriptor.RouteValues["action"] ?? "Unknown";
                 var moduleName = ExtractModuleFromController(controllerName);
-                var routeTemplate = api.RelativePath ?? "";
                 
-                // Get controller type for better routing type detection
-                Type? controllerType = null;
-                if (api.ActionDescriptor is Microsoft.AspNetCore.Mvc.Controllers.ControllerActionDescriptor controllerActionDescriptor)
-                {
-                    controllerType = controllerActionDescriptor.ControllerTypeInfo.AsType();
-                }
-                
-                var routingType = DetermineRoutingType(routeTemplate, controllerType);
-                
-                return $"{moduleName}_{routingType}_{actionName}";
+                return $"{moduleName}_{actionName}";
             });
 
-            // Automatic response examples for all ApiResponse<T> types
+            // Automatic response examples for ApiResponse<T> types only
             options.OperationFilter<AutoResponseExampleFilter>();
             
-            // Custom schema IDs to avoid conflicts
+            // Simple schema IDs to avoid conflicts
             options.CustomSchemaIds(type => 
             {
                 if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(ApiResponse<>))
@@ -100,7 +83,7 @@ public static class SwaggerAutoDiscoveryExtensions
     }
 
     /// <summary>
-    /// Uses Swagger UI with MicFx configuration
+    /// Uses Swagger UI with simplified MicFx configuration
     /// </summary>
     public static IApplicationBuilder UseMicFxSwaggerInfrastructure(this IApplicationBuilder app, IWebHostEnvironment environment)
     {
@@ -121,7 +104,7 @@ public static class SwaggerAutoDiscoveryExtensions
             options.RoutePrefix = "api/docs";
 
             // UI customization
-            options.DocumentTitle = "MicFx Framework - Smart Auto-Routing API";
+            options.DocumentTitle = "MicFx Framework - API Documentation";
             options.DefaultModelsExpandDepth(1);
             options.DefaultModelExpandDepth(1);
             options.DisplayRequestDuration();
@@ -137,128 +120,73 @@ public static class SwaggerAutoDiscoveryExtensions
     }
 
     /// <summary>
-    /// Determines routing type based on route template and controller namespace/folder structure
+    /// Simple module name extraction from controller name
+    /// SIMPLIFIED: Basic extraction without complex namespace scanning
     /// </summary>
-    private static string DetermineRoutingType(string routeTemplate, Type? controllerType = null)
+    private static string ExtractModuleFromController(string? controllerName)
     {
-        if (string.IsNullOrEmpty(routeTemplate))
-            return "Unknown";
+        if (string.IsNullOrEmpty(controllerName))
+            return "Framework";
 
-        routeTemplate = routeTemplate.ToLowerInvariant();
+        // Remove Controller suffix
+        var cleanName = controllerName.Replace("Controller", "");
 
-        // Check route patterns first
-        if (routeTemplate.StartsWith("api/"))
-            return "API";
+        // Simple module detection from assembly name pattern
+        var assemblies = AppDomain.CurrentDomain.GetAssemblies();
         
-        if (routeTemplate.StartsWith("admin/"))
-            return "Admin";
-
-        // Check namespace/folder structure if controller type is available
-        if (controllerType != null)
+        foreach (var assembly in assemblies.Where(a => a.GetName().Name?.StartsWith("MicFx.Modules.") == true))
         {
-            var namespaceName = controllerType.Namespace ?? "";
-            
-            // Controllers in Api folder/namespace should be treated as API
-            if (namespaceName.Contains(".Api"))
-                return "API";
-                
-            // Controllers in Admin folder/namespace should be treated as Admin
-            if (namespaceName.Contains(".Admin"))
-                return "Admin";
+            var assemblyName = assembly.GetName().Name;
+            if (assemblyName != null && assemblyName.StartsWith("MicFx.Modules."))
+            {
+                var parts = assemblyName.Split('.');
+                if (parts.Length >= 3)
+                {
+                    return parts[2]; // Extract module name (e.g., "Auth" from "MicFx.Modules.Auth")
+                }
+            }
         }
-            
-        return "MVC";
+
+        // Fallback to controller name
+        return cleanName;
     }
 
-            /// <summary>
-        /// Extract module name from controller name
-        /// Based on MicFx module naming conventions and folder structure patterns
-        /// </summary>
-        private static string ExtractModuleFromController(string? controllerName)
-        {
-            if (string.IsNullOrEmpty(controllerName))
-                return "Framework";
-
-            // Remove Controller suffix
-            var cleanName = controllerName.Replace("Controller", "");
-
-            // Check if from MicFx module based on assembly name
-            var assemblies = AppDomain.CurrentDomain.GetAssemblies();
-            
-            // Look for controller types in all MicFx modules
-            foreach (var assembly in assemblies.Where(a => a.GetName().Name?.StartsWith("MicFx.Modules.") == true))
-            {
-                var controllerTypes = assembly.GetTypes()
-                    .Where(t => t.Name.Equals($"{controllerName}Controller", StringComparison.OrdinalIgnoreCase) ||
-                               t.Name.Equals($"{controllerName}", StringComparison.OrdinalIgnoreCase))
-                    .ToList();
-
-                foreach (var controllerType in controllerTypes)
-                {
-                    var namespaceName = controllerType.Namespace ?? "";
-                    
-                    // Extract module name from namespace
-                    // Examples: 
-                    // MicFx.Modules.Auth.Api -> Auth
-                    // MicFx.Modules.HelloWorld.Controllers -> HelloWorld
-                    var namespaceParts = namespaceName.Split('.');
-                    if (namespaceParts.Length >= 3 && namespaceParts[0] == "MicFx" && namespaceParts[1] == "Modules")
-                    {
-                        return namespaceParts[2]; // MicFx.Modules.HelloWorld -> HelloWorld
-                    }
-                }
-            }
-
-            // Fallback: try assembly name extraction
-            var moduleAssembly = assemblies.FirstOrDefault(a =>
-                a.GetName().Name?.Contains($"MicFx.Modules.") == true);
-
-            if (moduleAssembly != null)
-            {
-                var assemblyName = moduleAssembly.GetName().Name ?? "";
-                var parts = assemblyName.Split('.');
-                if (parts.Length >= 3 && parts[0] == "MicFx" && parts[1] == "Modules")
-                {
-                    return parts[2]; // MicFx.Modules.HelloWorld -> HelloWorld
-                }
-            }
-
-            // Final fallback - clean the controller name
-            return cleanName ?? "Unknown";
-        }
-
     /// <summary>
-    /// Auto-discovery XML comments from all MicFx assemblies
+    /// Include XML comments from current assembly only
+    /// SIMPLIFIED: Only current assembly, no complex auto-discovery
     /// </summary>
-    private static void IncludeXmlCommentsAutoDiscovery(SwaggerGenOptions options)
+    private static void IncludeXmlCommentsFromCurrentAssembly(SwaggerGenOptions options)
     {
-        var assemblies = AppDomain.CurrentDomain.GetAssemblies()
-            .Where(a => a.GetName().Name?.StartsWith("MicFx") == true);
-
-        foreach (var assembly in assemblies)
+        try
         {
-            var xmlFile = $"{assembly.GetName().Name}.xml";
+            var currentAssembly = Assembly.GetExecutingAssembly();
+            var xmlFile = $"{currentAssembly.GetName().Name}.xml";
             var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-
+            
             if (File.Exists(xmlPath))
             {
                 options.IncludeXmlComments(xmlPath);
             }
         }
+        catch (Exception)
+        {
+            // Ignore XML comment loading errors
+        }
     }
 
     /// <summary>
-    /// Configure JWT Bearer security scheme
+    /// Configure JWT security scheme for Swagger
     /// </summary>
     private static void ConfigureSecurityScheme(SwaggerGenOptions options)
     {
         options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
         {
-            Description = "JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token in the text input below.",
             Name = "Authorization",
+            Type = SecuritySchemeType.Http,
+            Scheme = "Bearer",
+            BearerFormat = "JWT",
             In = ParameterLocation.Header,
-            Type = SecuritySchemeType.ApiKey,
-            Scheme = "Bearer"
+            Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\""
         });
 
         options.AddSecurityRequirement(new OpenApiSecurityRequirement

@@ -76,8 +76,8 @@ builder.Services.AddMicFxAbstractions();
 // 🏗️ Register MicFx Infrastructure implementations
 builder.Services.AddMicFxInfrastructure();
 
-// 3️⃣ Load modules with enhanced dependency and lifecycle management
-builder.Services.AddMicFxModulesWithDependencyManagement();
+// 3️⃣ Load modules with simplified dependency management
+builder.Services.AddMicFxModules();
 
 // 🔐 Configure Authorization Policies for Admin Area
 builder.Services.AddAuthorization(options =>

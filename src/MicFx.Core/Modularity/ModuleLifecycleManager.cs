@@ -2,12 +2,12 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using MicFx.SharedKernel.Modularity;
 using MicFx.SharedKernel.Common.Exceptions;
-using System.Collections.Concurrent;
 
 namespace MicFx.Core.Modularity
 {
     /// <summary>
-    /// Class for managing lifecycle of all modules in the framework
+    /// Simplified module lifecycle manager for MicFx framework
+    /// SIMPLIFIED: Removed complex event system and state management for better maintainability
     /// </summary>
     public class ModuleLifecycleManager
     {
@@ -15,9 +15,10 @@ namespace MicFx.Core.Modularity
         private readonly ModuleDependencyResolver _dependencyResolver;
         private readonly IServiceProvider _serviceProvider;
 
-        private readonly ConcurrentDictionary<string, ModuleStateInfo> _moduleStates = new();
-        private readonly ConcurrentDictionary<string, ModuleStartupBase> _moduleInstances = new();
-        private readonly ConcurrentDictionary<string, CancellationTokenSource> _moduleOperations = new();
+        // SIMPLIFIED: Simple dictionaries instead of ConcurrentDictionary overhead
+        private readonly Dictionary<string, ModuleStateInfo> _moduleStates = new();
+        private readonly Dictionary<string, ModuleStartupBase> _moduleInstances = new();
+        private readonly object _lock = new object(); // Simple lock for thread safety
 
         public ModuleLifecycleManager(
             ILogger<ModuleLifecycleManager> logger,
@@ -29,8 +30,6 @@ namespace MicFx.Core.Modularity
             _serviceProvider = serviceProvider;
         }
 
-        // Event system removed for simplicity - use logging instead of complex event notifications
-
         /// <summary>
         /// Registers a module to the lifecycle manager
         /// </summary>
@@ -38,14 +37,17 @@ namespace MicFx.Core.Modularity
         {
             var moduleName = moduleInstance.Manifest.Name;
 
-            _moduleInstances[moduleName] = moduleInstance;
-            _moduleStates[moduleName] = new ModuleStateInfo
+            lock (_lock)
             {
-                ModuleName = moduleName,
-                State = ModuleState.NotLoaded,
-                RegisteredAt = DateTime.UtcNow,
-                Manifest = moduleInstance.Manifest
-            };
+                _moduleInstances[moduleName] = moduleInstance;
+                _moduleStates[moduleName] = new ModuleStateInfo
+                {
+                    ModuleName = moduleName,
+                    State = ModuleState.NotLoaded,
+                    RegisteredAt = DateTime.UtcNow,
+                    Manifest = moduleInstance.Manifest
+                };
+            }
 
             _logger.LogInformation("Module {ModuleName} registered for lifecycle management", moduleName);
         }
@@ -57,17 +59,16 @@ namespace MicFx.Core.Modularity
         {
             _logger.LogInformation("Starting module lifecycle management for {ModuleCount} modules", _moduleInstances.Count);
 
-                    // Validate dependencies first
-        var validationResult = _dependencyResolver.ValidateDependencies();
-        if (!validationResult.IsValid)
-        {
-            var errorDetails = string.Join(", ", validationResult.MissingDependencies);
-            throw new ModuleException($"Module dependency validation failed: {errorDetails}", "LifecycleManager");
-        }
+            // Validate dependencies first
+            var validationResult = _dependencyResolver.ValidateDependencies();
+            if (!validationResult.IsValid)
+            {
+                var errorDetails = string.Join(", ", validationResult.MissingDependencies);
+                throw new ModuleException($"Module dependency validation failed: {errorDetails}", "LifecycleManager");
+            }
 
             // Get startup order
             var startupOrder = _dependencyResolver.GetStartupOrder();
-
             _logger.LogInformation("Module startup order: {StartupOrder}", string.Join(" -> ", startupOrder));
 
             // Start modules in dependency order
@@ -83,14 +84,13 @@ namespace MicFx.Core.Modularity
         }
 
         /// <summary>
-        /// Stops all modules in correct order
+        /// Stops all modules in reverse dependency order
         /// </summary>
         public async Task StopAllModulesAsync(CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("Stopping all modules");
 
             var shutdownOrder = _dependencyResolver.GetShutdownOrder();
-
             _logger.LogInformation("Module shutdown order: {ShutdownOrder}", string.Join(" -> ", shutdownOrder));
 
             foreach (var moduleName in shutdownOrder)
@@ -105,7 +105,8 @@ namespace MicFx.Core.Modularity
         }
 
         /// <summary>
-        /// Starts a specific module (simplified)
+        /// Starts a specific module with simplified error handling
+        /// SIMPLIFIED: Removed complex timeout handling and state transitions
         /// </summary>
         public async Task StartModuleAsync(string moduleName, CancellationToken cancellationToken = default)
         {
@@ -122,53 +123,36 @@ namespace MicFx.Core.Modularity
             }
 
             var module = _moduleInstances[moduleName];
-            var operationCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            _moduleOperations[moduleName] = operationCts;
 
             try
             {
-                // Simple timeout
-                operationCts.CancelAfter(TimeSpan.FromSeconds(30));
-
                 // Ensure dependencies are started first
-                await EnsureDependenciesStartedAsync(moduleName, operationCts.Token);
+                await EnsureDependenciesStartedAsync(moduleName, cancellationToken);
 
-                // SIMPLIFIED: Loading -> Loaded
-                await TransitionModuleStateAsync(moduleName, ModuleState.Loading, operationCts.Token);
+                // Simple state transition: Loading
+                SetModuleState(moduleName, ModuleState.Loading);
 
-                // Simplified lifecycle hook - InitializeAsync
+                // Execute lifecycle hook if available
                 if (module is IModuleLifecycle lifecycleModule)
                 {
-                    await lifecycleModule.InitializeAsync(operationCts.Token);
+                    await lifecycleModule.InitializeAsync(cancellationToken);
                 }
 
-                // Perform actual module startup
-                await PerformModuleStartupAsync(module, operationCts.Token);
+                // Mark as loaded
+                SetModuleState(moduleName, ModuleState.Loaded);
 
-                await TransitionModuleStateAsync(moduleName, ModuleState.Loaded, operationCts.Token);
-
-                _logger.LogInformation("Module {ModuleName} loaded successfully", moduleName);
-            }
-            catch (OperationCanceledException) when (operationCts.Token.IsCancellationRequested)
-            {
-                await TransitionModuleStateAsync(moduleName, ModuleState.Error, CancellationToken.None);
-                _logger.LogError("Module {ModuleName} startup timed out after 30 seconds", moduleName);
-                throw new ModuleException($"Module {moduleName} startup timed out", "LifecycleManager");
+                _logger.LogInformation("Module {ModuleName} started successfully", moduleName);
             }
             catch (Exception ex)
             {
-                await HandleModuleErrorAsync(moduleName, ex);
-                throw;
-            }
-            finally
-            {
-                _moduleOperations.TryRemove(moduleName, out _);
-                operationCts.Dispose();
+                SetModuleState(moduleName, ModuleState.Error);
+                _logger.LogError(ex, "Failed to start module {ModuleName}", moduleName);
+                throw new ModuleException($"Failed to start module {moduleName}: {ex.Message}", "LifecycleManager");
             }
         }
 
         /// <summary>
-        /// Stops a specific module (simplified)
+        /// Stops a specific module with simplified error handling
         /// </summary>
         public async Task StopModuleAsync(string moduleName, CancellationToken cancellationToken = default)
         {
@@ -189,131 +173,89 @@ namespace MicFx.Core.Modularity
 
             try
             {
-                // Simplified lifecycle hook - ShutdownAsync
+                // Execute lifecycle hook if available
                 if (module is IModuleLifecycle lifecycleModule)
                 {
                     await lifecycleModule.ShutdownAsync(cancellationToken);
                 }
 
-                // Stop dependent modules first
-                await StopDependentModulesAsync(moduleName, cancellationToken);
-
-                await TransitionModuleStateAsync(moduleName, ModuleState.NotLoaded, cancellationToken);
-
+                SetModuleState(moduleName, ModuleState.NotLoaded);
                 _logger.LogInformation("Module {ModuleName} stopped successfully", moduleName);
             }
             catch (Exception ex)
             {
-                await HandleModuleErrorAsync(moduleName, ex);
-                throw;
+                SetModuleState(moduleName, ModuleState.Error);
+                _logger.LogError(ex, "Failed to stop module {ModuleName}", moduleName);
+                throw new ModuleException($"Failed to stop module {moduleName}: {ex.Message}", "LifecycleManager");
             }
         }
 
         /// <summary>
-        /// Restarts a module (stop then start)
-        /// </summary>
-        public async Task RestartModuleAsync(string moduleName, CancellationToken cancellationToken = default)
-        {
-            _logger.LogInformation("Restarting module {ModuleName}", moduleName);
-
-            await StopModuleAsync(moduleName, cancellationToken);
-            await StartModuleAsync(moduleName, cancellationToken);
-
-            _logger.LogInformation("Module {ModuleName} restarted successfully", moduleName);
-        }
-
-
-
-        /// <summary>
-        /// Gets status of all modules
+        /// Gets all module states (thread-safe)
         /// </summary>
         public Dictionary<string, ModuleStateInfo> GetAllModuleStates()
         {
-            return _moduleStates.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+            lock (_lock)
+            {
+                return new Dictionary<string, ModuleStateInfo>(_moduleStates);
+            }
         }
 
         /// <summary>
-        /// Gets status of a specific module
+        /// Gets specific module state
         /// </summary>
         public ModuleStateInfo? GetModuleState(string moduleName)
         {
-            return _moduleStates.TryGetValue(moduleName, out var state) ? state : null;
+            lock (_lock)
+            {
+                return _moduleStates.TryGetValue(moduleName, out var state) ? state : null;
+            }
         }
 
-
-
-        private Task TransitionModuleStateAsync(string moduleName, ModuleState newState, CancellationToken cancellationToken)
+        /// <summary>
+        /// Simple state transition with thread safety
+        /// SIMPLIFIED: Direct state setting without complex event system
+        /// </summary>
+        private void SetModuleState(string moduleName, ModuleState newState)
         {
-            if (_moduleStates.TryGetValue(moduleName, out var currentStateInfo))
+            lock (_lock)
             {
-                var oldState = currentStateInfo.State;
-                currentStateInfo.State = newState;
-                currentStateInfo.LastStateChange = DateTime.UtcNow;
-
-                if (newState == ModuleState.Error)
+                if (_moduleStates.TryGetValue(moduleName, out var stateInfo))
                 {
-                    currentStateInfo.ErrorCount++;
+                    stateInfo.State = newState;
+                    stateInfo.LastStateChange = DateTime.UtcNow;
+                    
+                    if (newState == ModuleState.Error)
+                    {
+                        stateInfo.ErrorCount++;
+                    }
                 }
-
-                _logger.LogInformation("Module {ModuleName} state changed from {OldState} to {NewState}",
-                    moduleName, oldState, newState);
-
-              
-                _logger.LogInformation("Module {ModuleName} state changed from {OldState} to {NewState}",
-                    moduleName, oldState, newState);
             }
 
-            return Task.CompletedTask;
+            _logger.LogDebug("Module {ModuleName} state changed to {State}", moduleName, newState);
         }
 
-        private async Task HandleModuleErrorAsync(string moduleName, Exception error)
-        {
-            await TransitionModuleStateAsync(moduleName, ModuleState.Error, CancellationToken.None);
-
-            _logger.LogError(error, "Error in module {ModuleName}", moduleName);
-
-            // Simplified error handling - no complex lifecycle hooks
-            // Module will need to be restarted manually
-        }
-
+        /// <summary>
+        /// Ensure all dependencies are started before starting this module
+        /// </summary>
         private async Task EnsureDependenciesStartedAsync(string moduleName, CancellationToken cancellationToken)
         {
             var dependencies = _dependencyResolver.GetDirectDependencies(moduleName);
-
+            
             foreach (var dependency in dependencies)
             {
-                if (_moduleStates.TryGetValue(dependency, out var depState) && depState.State != ModuleState.Loaded)
+                var dependencyState = GetModuleState(dependency);
+                if (dependencyState?.State != ModuleState.Loaded)
                 {
                     await StartModuleAsync(dependency, cancellationToken);
                 }
             }
         }
-
-        private async Task StopDependentModulesAsync(string moduleName, CancellationToken cancellationToken)
-        {
-            var dependents = _dependencyResolver.GetDirectDependents(moduleName);
-
-            foreach (var dependent in dependents)
-            {
-                if (_moduleStates.TryGetValue(dependent, out var depState) && depState.State == ModuleState.Loaded)
-                {
-                    await StopModuleAsync(dependent, cancellationToken);
-                }
-            }
-        }
-
-        private Task PerformModuleStartupAsync(ModuleStartupBase module, CancellationToken cancellationToken)
-        {
-            // This is where we would call the actual module startup logic
-            // For now, we assume the module startup happens via DI registration
-            return Task.CompletedTask;
-        }
-
-        // Removed FormatValidationErrors method - simplified validation error handling
     }
 
     /// <summary>
-    /// Module state information
+    /// Simplified module state information
+    /// SIMPLIFIED: Removed complex tracking fields
     /// </summary>
     public class ModuleStateInfo
     {
@@ -324,6 +266,4 @@ namespace MicFx.Core.Modularity
         public int ErrorCount { get; set; }
         public IModuleManifest? Manifest { get; set; }
     }
-
-    // Event system simplified - removed complex ModuleStateChangedEventArgs for better maintainability
 }

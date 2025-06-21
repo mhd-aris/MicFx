@@ -30,7 +30,7 @@ namespace MicFx.Core.Extensions
         /// Adds MicFx modules with simplified dependency management
         /// SIMPLIFIED: Removed complex optimization and caching for clarity
         /// </summary>
-        public static IServiceCollection AddMicFxModulesWithDependencyManagement(this IServiceCollection services)
+        public static IServiceCollection AddMicFxModules(this IServiceCollection services)
         {
             // Add basic module management services
             services.AddMicFxModuleManagement();
