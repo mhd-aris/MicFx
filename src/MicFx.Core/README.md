@@ -484,65 +484,27 @@ public class YourModuleController : Controller
 
 ## 🔄 **Lifecycle Hooks**
 
-### **Module Lifecycle Events**
+### **Module Lifecycle Events (Simplified)**
 ```csharp
 public class Startup : ModuleStartupBase, IModuleLifecycle
 {
-    public override async Task OnLoadingAsync(CancellationToken cancellationToken = default)
+    public override async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
-        // Initialize resources, validate dependencies
+        // Initialize resources and setup module
         await InitializeResourcesAsync();
-    }
-    
-    public override async Task OnStartedAsync(CancellationToken cancellationToken = default)
-    {
-        // Module fully started - begin background services
         await StartBackgroundServicesAsync();
     }
     
-    public override async Task OnStoppingAsync(CancellationToken cancellationToken = default)
+    public override async Task ShutdownAsync(CancellationToken cancellationToken = default)
     {
-        // Graceful shutdown - stop background services
+        // Graceful shutdown - cleanup resources
         await StopBackgroundServicesAsync();
-    }
-    
-    public override async Task OnErrorAsync(Exception error, CancellationToken cancellationToken = default)
-    {
-        // Handle module errors - cleanup, logging, notifications
-        await HandleModuleErrorAsync(error);
+        await CleanupResourcesAsync();
     }
 }
 ```
 
-### **Hot Reload Support**
-```csharp
-public class Startup : ModuleStartupBase, IModuleHotReload
-{
-    public async Task<bool> CanReloadAsync()
-    {
-        // Check if module is in safe state for reload
-        return await IsInSafeStateAsync();
-    }
-    
-    public async Task OnReloadingAsync(CancellationToken cancellationToken = default)
-    {
-        // Prepare for reload - save state, pause operations
-        await PrepareForReloadAsync();
-    }
-    
-    public async Task<IEnumerable<string>> GetReloadResourcesAsync(CancellationToken cancellationToken = default)
-    {
-        // Return list of resources that need reloading
-        return new[] { "configuration", "views", "assemblies" };
-    }
-    
-    public async Task OnReloadedAsync(CancellationToken cancellationToken = default)
-    {
-        // Reload completed - restore state, resume operations
-        await RestoreFromReloadAsync();
-    }
-}
-```
+> **Catatan:** Hot reload support dan multiple lifecycle hooks telah dihapus untuk menyederhanakan framework dan meningkatkan performa. Hanya dua hooks essential yang tersisa: Initialize dan Shutdown.
 
 ---
 

@@ -29,10 +29,7 @@ namespace MicFx.Core.Modularity
             _serviceProvider = serviceProvider;
         }
 
-        /// <summary>
-        /// Event that is triggered when module state changes
-        /// </summary>
-        public event EventHandler<ModuleStateChangedEventArgs>? ModuleStateChanged;
+        // Event system removed for simplicity - use logging instead of complex event notifications
 
         /// <summary>
         /// Registers a module to the lifecycle manager
@@ -261,14 +258,9 @@ namespace MicFx.Core.Modularity
                 _logger.LogInformation("Module {ModuleName} state changed from {OldState} to {NewState}",
                     moduleName, oldState, newState);
 
-                // Fire event
-                ModuleStateChanged?.Invoke(this, new ModuleStateChangedEventArgs
-                {
-                    ModuleName = moduleName,
-                    OldState = oldState,
-                    NewState = newState,
-                    Timestamp = currentStateInfo.LastStateChange
-                });
+              
+                _logger.LogInformation("Module {ModuleName} state changed from {OldState} to {NewState}",
+                    moduleName, oldState, newState);
             }
 
             return Task.CompletedTask;
@@ -348,14 +340,5 @@ namespace MicFx.Core.Modularity
         public IModuleManifest? Manifest { get; set; }
     }
 
-    /// <summary>
-    /// Event args for module state change
-    /// </summary>
-    public class ModuleStateChangedEventArgs : EventArgs
-    {
-        public string ModuleName { get; set; } = string.Empty;
-        public ModuleState OldState { get; set; }
-        public ModuleState NewState { get; set; }
-        public DateTime Timestamp { get; set; }
-    }
+    // Event system simplified - removed complex ModuleStateChangedEventArgs for better maintainability
 }

@@ -336,24 +336,10 @@ namespace MicFx.Core.Extensions
         /// </summary>
         private static void RegisterEnhancedShutdownHandler(WebApplication app)
         {
-            app.Lifetime.ApplicationStopping.Register(async () =>
+            // Simplified shutdown - let DI container handle cleanup automatically
+            app.Lifetime.ApplicationStopping.Register(() =>
             {
-                Log.Information("🛑 Application is stopping, shutting down modules gracefully...");
-                var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-
-                try
-                {
-                    var lifecycleManager = app.Services.GetRequiredService<ModuleLifecycleManager>();
-                    await lifecycleManager.StopAllModulesAsync();
-
-                    stopwatch.Stop();
-                    Log.Information("✅ All modules stopped successfully in {ElapsedMs}ms", stopwatch.ElapsedMilliseconds);
-                }
-                catch (Exception ex)
-                {
-                    stopwatch.Stop();
-                    Log.Error(ex, "❌ Error during module shutdown after {ElapsedMs}ms", stopwatch.ElapsedMilliseconds);
-                }
+                Log.Information("🛑 Application stopping - modules will be cleaned up by DI container");
             });
         }
 

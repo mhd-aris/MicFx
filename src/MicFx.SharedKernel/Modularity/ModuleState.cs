@@ -59,14 +59,4 @@ public class ModuleStateInfo
     public Exception? LastError { get; set; }
 }
 
-/// <summary>
-/// Event arguments for module state changes
-/// </summary>
-public class ModuleStateChangedEventArgs : EventArgs
-{
-    public string ModuleName { get; set; } = string.Empty;
-    public ModuleState OldState { get; set; }
-    public ModuleState NewState { get; set; }
-    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
-    public string? Description { get; set; }
-}
+// ModuleStateChangedEventArgs removed for simplicity - use logging instead of complex event system

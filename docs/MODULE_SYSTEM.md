@@ -575,60 +575,32 @@ services.Decorate<IDataService, CachedDataService>();
 
 ## 📈 **Advanced Features**
 
-### **Hot Reload Support**
+### **Simplified Module Lifecycle**
 ```csharp
 public class Manifest : ModuleManifestBase
 {
-    public override bool SupportsHotReload => true;
-    
-    public override async Task<bool> CanReloadAsync()
-    {
-        // Check if safe to reload
-        var activeConnections = await GetActiveConnectionsAsync();
-        return activeConnections < 10; // Safe threshold
-    }
-
-    public override async Task PrepareForReloadAsync()
-    {
-        // Prepare for reload
-        await DrainConnectionsAsync();
-        await SaveStateAsync();
-    }
-
-    public override async Task ReloadAsync()
-    {
-        // Reload logic
-        await ReloadConfigurationAsync();
-        await RestoreStateAsync();
-    }
+    // Hot reload removed for simplicity - deploy new version instead
+    public override bool IsCritical => false; // Only essential property remains
 }
 ```
 
-### **Module Communication**
+### **Module Communication (Simplified)**
 ```csharp
-// Event-based communication
-public interface IModuleEventBus
-{
-    Task PublishAsync<T>(T eventData) where T : class;
-    void Subscribe<T>(Func<T, Task> handler) where T : class;
-}
-
-// Usage in module
+// Use direct service dependencies instead of complex event bus
 public class YourModuleService
 {
-    private readonly IModuleEventBus _eventBus;
+    private readonly ILogger<YourModuleService> _logger;
+    private readonly IOtherModuleService _otherModuleService; // Direct DI injection
 
     public async Task ProcessDataAsync(Data data)
     {
         // Process data
         await ProcessAsync(data);
         
-        // Notify other modules
-        await _eventBus.PublishAsync(new DataProcessedEvent
-        {
-            DataId = data.Id,
-            ProcessedAt = DateTime.UtcNow
-        });
+        // Simple direct call instead of event bus
+        await _otherModuleService.HandleDataProcessedAsync(data.Id);
+        
+        _logger.LogInformation("Data {DataId} processed successfully", data.Id);
     }
 }
 ```
