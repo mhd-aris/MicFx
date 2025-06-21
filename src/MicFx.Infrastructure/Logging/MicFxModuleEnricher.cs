@@ -5,57 +5,36 @@ using System.Reflection;
 namespace MicFx.Infrastructure.Logging;
 
 /// <summary>
-/// Custom Serilog enricher that adds module context to log entries
-/// Helps in debugging and monitoring module-specific issues
+/// Simple Serilog enricher that adds basic module context to log entries  
+/// SIMPLIFIED: Removed complex stack trace parsing and expensive assembly operations
 /// </summary>
 public class MicFxModuleEnricher : ILogEventEnricher
 {
     private const string ModulePropertyName = "Module";
     private const string AssemblyPropertyName = "Assembly";
-    private const string VersionPropertyName = "Version";
-
-
 
     /// <summary>
-    /// Enriches log event with module information
+    /// Enriches log event with basic module information
+    /// SIMPLIFIED: Basic assembly name extraction only
     /// </summary>
-    /// <param name="logEvent">The log event to enrich</param>
-    /// <param name="propertyFactory">Property factory for creating log properties</param>
     public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
     {
         try
         {
-            // Get the calling assembly
-            var callingAssembly = GetCallingAssembly();
-            if (callingAssembly == null) return;
+            // Get simple calling assembly without complex stack trace analysis
+            var assembly = Assembly.GetCallingAssembly();
+            var assemblyName = assembly.GetName().Name ?? "Unknown";
 
-            var assemblyName = callingAssembly.GetName();
-            var fullName = assemblyName.Name ?? "Unknown";
+            // Extract basic module information
+            var moduleName = ExtractModuleName(assemblyName);
 
-            // Extract module information
-            var moduleInfo = ExtractModuleInfo(fullName);
+            // Add module name
+            var moduleProperty = propertyFactory.CreateProperty(ModulePropertyName, moduleName);
+            logEvent.AddPropertyIfAbsent(moduleProperty);
 
-            if (moduleInfo != null)
-            {
-                // Add module name
-                var moduleProperty = propertyFactory.CreateProperty(
-                    ModulePropertyName,
-                    moduleInfo.ModuleName);
-                logEvent.AddPropertyIfAbsent(moduleProperty);
-
-                // Add assembly name
-                var assemblyProperty = propertyFactory.CreateProperty(
-                    AssemblyPropertyName,
-                    fullName);
-                logEvent.AddPropertyIfAbsent(assemblyProperty);
-
-                // Add version if available
-                var version = assemblyName.Version?.ToString() ?? "Unknown";
-                var versionProperty = propertyFactory.CreateProperty(
-                    VersionPropertyName,
-                    version);
-                logEvent.AddPropertyIfAbsent(versionProperty);
-            }
+            // Add assembly name
+            var assemblyProperty = propertyFactory.CreateProperty(AssemblyPropertyName, assemblyName);
+            logEvent.AddPropertyIfAbsent(assemblyProperty);
         }
         catch
         {
@@ -64,136 +43,29 @@ public class MicFxModuleEnricher : ILogEventEnricher
     }
 
     /// <summary>
-    /// Gets the calling assembly from stack trace
+    /// Simple module name extraction from assembly name
+    /// SIMPLIFIED: Basic string parsing without complex reflection
     /// </summary>
-    private static Assembly? GetCallingAssembly()
-    {
-        try
-        {
-            var stackTrace = Environment.StackTrace;
-            if (string.IsNullOrEmpty(stackTrace)) return null;
-
-            var lines = stackTrace.Split('\n');
-
-            foreach (var line in lines)
-            {
-                if (string.IsNullOrWhiteSpace(line)) continue;
-
-                // Look for method calls that are not from Serilog or System namespaces
-                if (line.Contains(" at ") &&
-                    !line.Contains("Serilog") &&
-                    !line.Contains("System.") &&
-                    !line.Contains("Microsoft."))
-                {
-                    // Try to extract type information
-                    var match = System.Text.RegularExpressions.Regex.Match(
-                        line, @"at\s+([^\s\(]+)");
-
-                    if (match.Success)
-                    {
-                        var typeName = match.Groups[1].Value;
-                        var lastDotIndex = typeName.LastIndexOf('.');
-                        if (lastDotIndex > 0)
-                        {
-                            var namespaceName = typeName.Substring(0, lastDotIndex);
-
-                            // Try to find assembly by namespace
-                            var assemblies = AppDomain.CurrentDomain.GetAssemblies();
-                            var assembly = assemblies.FirstOrDefault(a =>
-                            {
-                                try
-                                {
-                                    return a.GetTypes().Any(t =>
-                                        t.Namespace?.StartsWith(namespaceName) == true);
-                                }
-                                catch
-                                {
-                                    return false;
-                                }
-                            });
-
-                            if (assembly != null) return assembly;
-                        }
-                    }
-                }
-            }
-
-            // Fallback to calling assembly
-            return Assembly.GetCallingAssembly();
-        }
-        catch
-        {
-            return null;
-        }
-    }
-
-    /// <summary>
-    /// Extracts module information from assembly name
-    /// </summary>
-    private static ModuleInfo? ExtractModuleInfo(string assemblyName)
+    private static string ExtractModuleName(string assemblyName)
     {
         if (string.IsNullOrEmpty(assemblyName))
-            return null;
+            return "Unknown";
 
         // Handle MicFx module pattern: MicFx.Modules.{ModuleName}
         if (assemblyName.StartsWith("MicFx.Modules."))
         {
             var parts = assemblyName.Split('.');
-            if (parts.Length >= 3)
-            {
-                return new ModuleInfo
-                {
-                    ModuleName = parts[2],
-                    IsFrameworkModule = true,
-                    FullAssemblyName = assemblyName
-                };
-            }
+            return parts.Length >= 3 ? parts[2] : assemblyName;
         }
 
-        // Handle MicFx core components
+        // Handle MicFx core components: MicFx.{Component}
         if (assemblyName.StartsWith("MicFx."))
         {
             var parts = assemblyName.Split('.');
-            if (parts.Length >= 2)
-            {
-                return new ModuleInfo
-                {
-                    ModuleName = parts[1],
-                    IsFrameworkModule = true,
-                    FullAssemblyName = assemblyName
-                };
-            }
+            return parts.Length >= 2 ? parts[1] : assemblyName;
         }
 
-        // Handle custom modules or applications
-        var lastDotIndex = assemblyName.LastIndexOf('.');
-        if (lastDotIndex > 0)
-        {
-            var moduleName = assemblyName.Substring(lastDotIndex + 1);
-            return new ModuleInfo
-            {
-                ModuleName = moduleName,
-                IsFrameworkModule = false,
-                FullAssemblyName = assemblyName
-            };
-        }
-
-        // Fallback
-        return new ModuleInfo
-        {
-            ModuleName = assemblyName,
-            IsFrameworkModule = false,
-            FullAssemblyName = assemblyName
-        };
-    }
-
-    /// <summary>
-    /// Module information extracted from assembly
-    /// </summary>
-    public record ModuleInfo
-    {
-        public string ModuleName { get; set; } = string.Empty;
-        public bool IsFrameworkModule { get; set; }
-        public string FullAssemblyName { get; set; } = string.Empty;
+        // Return assembly name as-is for non-MicFx assemblies
+        return assemblyName;
     }
 }
