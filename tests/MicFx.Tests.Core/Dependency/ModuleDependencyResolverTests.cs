@@ -173,7 +173,7 @@ public class ModuleDependencyResolverTests : IDisposable
     public void ValidateDependencies_WithEmptyDependencyNames_ShouldIgnoreEmptyEntries()
     {
         // Arrange
-        var moduleA = CreateMockManifest("ModuleA", "1.0.0", new string?[] { "", "  ", null });
+        var moduleA = CreateMockManifest("ModuleA", "1.0.0", new string[] { "", "  " });
         _sut.RegisterModule(moduleA);
 
         // Act
@@ -214,12 +214,12 @@ public class ModuleDependencyResolverTests : IDisposable
     }
 
     [Fact]
-    public void GetStartupOrder_WithMultipleModules_ShouldOrderByPriorityDescending()
+    public void GetStartupOrder_WithMultipleModules_ShouldOrderByPriorityAscending()
     {
-        // Arrange - Higher priority should load first
-        var moduleA = CreateMockManifest("ModuleA", "1.0.0", priority: 300);
+        // Arrange - Lower number = higher priority, loads first
+        var moduleA = CreateMockManifest("ModuleA", "1.0.0", priority: 100);
         var moduleB = CreateMockManifest("ModuleB", "1.0.0", priority: 200);
-        var moduleC = CreateMockManifest("ModuleC", "1.0.0", priority: 100);
+        var moduleC = CreateMockManifest("ModuleC", "1.0.0", priority: 300);
         
         _sut.RegisterModule(moduleC); // Register in random order
         _sut.RegisterModule(moduleA);
@@ -230,9 +230,9 @@ public class ModuleDependencyResolverTests : IDisposable
 
         // Assert
         order.Should().HaveCount(3);
-        order[0].Should().Be("ModuleA"); // Highest priority (300)
+        order[0].Should().Be("ModuleA"); // Highest priority (100 - lower number)
         order[1].Should().Be("ModuleB"); // Medium priority (200)
-        order[2].Should().Be("ModuleC"); // Lowest priority (100)
+        order[2].Should().Be("ModuleC"); // Lowest priority (300 - higher number)
     }
 
     [Fact]
@@ -264,10 +264,10 @@ public class ModuleDependencyResolverTests : IDisposable
     [Fact]
     public void GetShutdownOrder_ShouldReturnReverseOfStartupOrder()
     {
-        // Arrange
-        var moduleA = CreateMockManifest("ModuleA", "1.0.0", priority: 300);
+        // Arrange - Lower number = higher priority
+        var moduleA = CreateMockManifest("ModuleA", "1.0.0", priority: 100);
         var moduleB = CreateMockManifest("ModuleB", "1.0.0", priority: 200);
-        var moduleC = CreateMockManifest("ModuleC", "1.0.0", priority: 100);
+        var moduleC = CreateMockManifest("ModuleC", "1.0.0", priority: 300);
         
         _sut.RegisterModule(moduleA);
         _sut.RegisterModule(moduleB);
@@ -279,9 +279,9 @@ public class ModuleDependencyResolverTests : IDisposable
 
         // Assert
         shutdownOrder.Should().HaveCount(3);
-        shutdownOrder[0].Should().Be("ModuleC"); // Lowest priority shuts down first
+        shutdownOrder[0].Should().Be("ModuleC"); // Lowest priority (highest number) shuts down first
         shutdownOrder[1].Should().Be("ModuleB");
-        shutdownOrder[2].Should().Be("ModuleA"); // Highest priority shuts down last
+        shutdownOrder[2].Should().Be("ModuleA"); // Highest priority (lowest number) shuts down last
         
         // Verify it's exactly the reverse
         shutdownOrder.Should().BeEquivalentTo(startupOrder.Reverse());
@@ -341,7 +341,7 @@ public class ModuleDependencyResolverTests : IDisposable
     public void GetDirectDependencies_ShouldFilterOutEmptyDependencies()
     {
         // Arrange
-        var manifest = CreateMockManifest("ModuleB", "1.0.0", new string?[] { "ModuleA", "", "  ", null, "ModuleC" });
+        var manifest = CreateMockManifest("ModuleB", "1.0.0", new string[] { "ModuleA", "", "  ", "ModuleC" });
         _sut.RegisterModule(manifest);
 
         // Act

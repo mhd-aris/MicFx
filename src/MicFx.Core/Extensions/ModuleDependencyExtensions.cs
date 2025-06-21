@@ -65,8 +65,17 @@ namespace MicFx.Core.Extensions
                 // Configure module endpoints
                 ConfigureModuleEndpoints(app);
 
-                // Start modules using lifecycle manager
+                // Get the lifecycle manager and register modules with it
                 var lifecycleManager = app.Services.GetRequiredService<ModuleLifecycleManager>();
+                var moduleInstances = app.Services.GetServices<ModuleStartupBase>();
+
+                // Register modules with lifecycle manager
+                foreach (var moduleInstance in moduleInstances)
+                {
+                    lifecycleManager.RegisterModule(moduleInstance);
+                }
+
+                // Start modules using lifecycle manager
                 await lifecycleManager.StartAllModulesAsync();
 
                 Log.Information("All modules started successfully");
@@ -170,21 +179,32 @@ namespace MicFx.Core.Extensions
 
         /// <summary>
         /// Configure module services in dependency order
-        /// SIMPLIFIED: Clear, sequential configuration
+        /// SIMPLIFIED: Clear, sequential configuration without building intermediate service provider
         /// </summary>
         private static void ConfigureModuleServices(IServiceCollection services, List<ModuleStartupBase> moduleInstances)
         {
-            var dependencyResolver = new ModuleDependencyResolver(
-                services.BuildServiceProvider().GetRequiredService<ILogger<ModuleDependencyResolver>>());
+            // Create a simple logger instead of building service provider
+            using var loggerFactory = Microsoft.Extensions.Logging.LoggerFactory.Create(builder =>
+            {
+                builder.AddConsole();
+            });
+            var logger = loggerFactory.CreateLogger<ModuleDependencyResolver>();
+
+            var dependencyResolver = new ModuleDependencyResolver(logger);
 
             // Register all modules with dependency resolver
             foreach (var moduleInstance in moduleInstances)
             {
                 dependencyResolver.RegisterModule(moduleInstance.Manifest);
+                Log.Information("Registered module '{ModuleName}' with priority {Priority}", 
+                    moduleInstance.Manifest.Name, moduleInstance.Manifest.Priority);
             }
 
             // Validate dependencies
             var validationResult = dependencyResolver.ValidateDependencies();
+            Log.Information("Dependency validation completed. Valid: {IsValid}, Missing: {MissingCount}", 
+                validationResult.IsValid, validationResult.MissingDependencies.Count);
+
             if (!validationResult.IsValid)
             {
                 var errors = string.Join(", ", validationResult.MissingDependencies);
@@ -193,6 +213,9 @@ namespace MicFx.Core.Extensions
 
             // Configure services in dependency order
             var startupOrder = dependencyResolver.GetStartupOrder();
+            Log.Information("Startup order for {ModuleCount} modules: {StartupOrder}", 
+                moduleInstances.Count, string.Join(" → ", startupOrder));
+
             foreach (var moduleName in startupOrder)
             {
                 var moduleInstance = moduleInstances.FirstOrDefault(m => m.Manifest.Name == moduleName);

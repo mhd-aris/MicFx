@@ -34,7 +34,6 @@ public static class SerilogExtensions
         var loggerConfiguration = CreateBasicLoggerConfiguration(configuration, environment, options);
         Log.Logger = loggerConfiguration.CreateLogger();
 
-        services.AddSerilog();
         return services;
     }
 
