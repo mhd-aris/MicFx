@@ -1,7 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using MicFx.Abstractions.Logging;
 using MicFx.Abstractions.Caching;
-using MicFx.Abstractions.Security;
 
 namespace MicFx.Abstractions.Extensions;
 
@@ -42,21 +41,6 @@ public static class ServiceCollectionExtensions
     }
 
     /// <summary>
-    /// Adds security interfaces to the service collection
-    /// Note: The actual implementation will be registered by Infrastructure layer
-    /// </summary>
-    /// <param name="services">Service collection</param>
-    /// <returns>Service collection for chaining</returns>
-    public static IServiceCollection AddMicFxSecurityAbstractions(this IServiceCollection services)
-    {
-        // Register security interfaces
-        // Implementation will be provided by MicFx.Infrastructure
-        services.AddTransient<ISecurityService, DefaultSecurityService>();
-        
-        return services;
-    }
-
-    /// <summary>
     /// Adds all MicFx abstractions to the service collection
     /// This is a convenience method for modules that need multiple abstractions
     /// </summary>
@@ -66,7 +50,6 @@ public static class ServiceCollectionExtensions
     {
         services.AddMicFxLoggingAbstractions();
         services.AddMicFxCachingAbstractions();
-        services.AddMicFxSecurityAbstractions();
         
         return services;
     }
@@ -102,43 +85,5 @@ internal class DefaultCacheService : ICacheService
     public Task RemoveAsync(string key, CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException("Caching implementation not registered. Please ensure MicFx.Infrastructure is properly configured.");
-    }
-}
-
-internal class DefaultSecurityService : ISecurityService
-{
-    public Task<TokenValidationResult> ValidateTokenAsync(string token, CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException("Security implementation not registered. Please ensure MicFx.Infrastructure is properly configured.");
-    }
-
-    public Task<AuthorizationResult> CheckPermissionsAsync(string userId, string[] permissions, CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException("Security implementation not registered. Please ensure MicFx.Infrastructure is properly configured.");
-    }
-
-    public Task LogSecurityEventAsync(SecurityEvent securityEvent, CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException("Security implementation not registered. Please ensure MicFx.Infrastructure is properly configured.");
-    }
-
-    public Task<string> EncryptAsync(string data, string? keyId = null)
-    {
-        throw new NotImplementedException("Security implementation not registered. Please ensure MicFx.Infrastructure is properly configured.");
-    }
-
-    public Task<string> DecryptAsync(string encryptedData, string? keyId = null)
-    {
-        throw new NotImplementedException("Security implementation not registered. Please ensure MicFx.Infrastructure is properly configured.");
-    }
-
-    public string GenerateHash(string data, string? salt = null)
-    {
-        throw new NotImplementedException("Security implementation not registered. Please ensure MicFx.Infrastructure is properly configured.");
-    }
-
-    public bool VerifyHash(string data, string hash, string? salt = null)
-    {
-        throw new NotImplementedException("Security implementation not registered. Please ensure MicFx.Infrastructure is properly configured.");
     }
 } 

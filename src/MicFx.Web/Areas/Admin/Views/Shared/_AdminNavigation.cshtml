@@ -3,8 +3,8 @@
 @inject AdminNavDiscoveryService NavDiscoveryService
 
 @{
-    var navItems = await NavDiscoveryService.GetNavigationItemsAsync(Context);
-    var navItemsByCategory = await NavDiscoveryService.GetNavigationItemsByCategoryAsync(Context);
+    var navItems = await NavDiscoveryService.GetNavigationItemsAsync();
+    var navItemsByCategory = navItems.GroupBy(x => x.Category).ToDictionary(g => g.Key, g => g.ToList());
 }
 
 <!-- Dynamic Navigation from Modules -->

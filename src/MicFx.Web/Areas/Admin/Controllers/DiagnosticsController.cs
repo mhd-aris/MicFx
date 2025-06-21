@@ -33,11 +33,12 @@ namespace MicFx.Web.Areas.Admin.Controllers
         {
             ViewData["Title"] = "Admin Navigation Diagnostics";
 
+            var navigationItems = await _navDiscoveryService.GetNavigationItemsAsync();
             var model = new DiagnosticsViewModel
             {
                 ScanResults = _moduleScanner.GetScanResults(),
-                NavigationItems = await _navDiscoveryService.GetNavigationItemsAsync(HttpContext),
-                NavigationByCategory = await _navDiscoveryService.GetNavigationItemsByCategoryAsync(HttpContext),
+                NavigationItems = navigationItems,
+                NavigationByCategory = navigationItems.GroupBy(x => x.Category).ToDictionary(g => g.Key, g => g.ToList()),
                 UserInfo = new UserDiagnosticInfo
                 {
                     IsAuthenticated = User.Identity?.IsAuthenticated ?? false,
@@ -56,13 +57,12 @@ namespace MicFx.Web.Areas.Admin.Controllers
         }
 
         /// <summary>
-        /// Clear navigation cache
+        /// Clear navigation cache (simplified - no caching implemented)
         /// </summary>
         [HttpPost("clear-cache")]
         public IActionResult ClearCache()
         {
-            _navDiscoveryService.ClearUserCache(User);
-            TempData["SuccessMessage"] = "Navigation cache cleared successfully!";
+            TempData["SuccessMessage"] = "Navigation refreshed successfully!";
             return RedirectToAction(nameof(Index));
         }
 
@@ -72,7 +72,7 @@ namespace MicFx.Web.Areas.Admin.Controllers
         [HttpGet("api/navigation")]
         public async Task<IActionResult> GetNavigationJson()
         {
-            var navItems = await _navDiscoveryService.GetNavigationItemsAsync(HttpContext);
+            var navItems = await _navDiscoveryService.GetNavigationItemsAsync();
             return Json(navItems);
         }
 
@@ -108,7 +108,7 @@ namespace MicFx.Web.Areas.Admin.Controllers
                 var testUser = CreateTestUser(scenario.Roles);
                 var testContext = CreateTestHttpContext(testUser);
                 
-                var navItems = await _navDiscoveryService.GetNavigationItemsAsync(testContext);
+                var navItems = await _navDiscoveryService.GetNavigationItemsAsync();
                 
                 testResults.Add(new RoleTestResult
                 {

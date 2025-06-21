@@ -1,12 +1,13 @@
 using Serilog.Core;
 using Serilog.Events;
+using System.Diagnostics;
 using System.Reflection;
 
 namespace MicFx.Infrastructure.Logging;
 
 /// <summary>
 /// Simple Serilog enricher that adds basic module context to log entries  
-/// SIMPLIFIED: Removed complex stack trace parsing and expensive assembly operations
+/// FIXED: Uses StackTrace to properly detect the actual calling module
 /// </summary>
 public class MicFxModuleEnricher : ILogEventEnricher
 {
@@ -15,15 +16,15 @@ public class MicFxModuleEnricher : ILogEventEnricher
 
     /// <summary>
     /// Enriches log event with basic module information
-    /// SIMPLIFIED: Basic assembly name extraction only
+    /// FIXED: Uses StackTrace to get the real calling assembly
     /// </summary>
     public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
     {
         try
         {
-            // Get simple calling assembly without complex stack trace analysis
-            var assembly = Assembly.GetCallingAssembly();
-            var assemblyName = assembly.GetName().Name ?? "Unknown";
+            // Use StackTrace to find the actual calling assembly
+            var assembly = GetCallingAssemblyFromStackTrace();
+            var assemblyName = assembly?.GetName().Name ?? "Unknown";
 
             // Extract basic module information
             var moduleName = ExtractModuleName(assemblyName);
@@ -40,6 +41,37 @@ public class MicFxModuleEnricher : ILogEventEnricher
         {
             // Fail silently - enrichers should never break logging
         }
+    }
+
+    /// <summary>
+    /// Gets the calling assembly by walking the stack trace to skip Serilog internal calls
+    /// </summary>
+    private static Assembly? GetCallingAssemblyFromStackTrace()
+    {
+        var stackTrace = new StackTrace();
+        var frames = stackTrace.GetFrames();
+
+        if (frames == null) return null;
+
+        foreach (var frame in frames)
+        {
+            var method = frame.GetMethod();
+            if (method?.DeclaringType?.Assembly == null) continue;
+
+            var assemblyName = method.DeclaringType.Assembly.GetName().Name;
+            
+            // Skip Serilog, Microsoft, and System assemblies
+            if (assemblyName != null && 
+                !assemblyName.StartsWith("Serilog") &&
+                !assemblyName.StartsWith("Microsoft") &&
+                !assemblyName.StartsWith("System") &&
+                assemblyName.StartsWith("MicFx"))
+            {
+                return method.DeclaringType.Assembly;
+            }
+        }
+
+        return Assembly.GetEntryAssembly();
     }
 
     /// <summary>

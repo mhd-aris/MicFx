@@ -32,8 +32,8 @@ public class DashboardController : Controller
         
         // Get module information
         var scanResults = _moduleScanner.GetScanResults();
-        var navigationItems = await _navDiscoveryService.GetNavigationItemsAsync(HttpContext);
-        var navigationByCategory = await _navDiscoveryService.GetNavigationItemsByCategoryAsync(HttpContext);
+                                var navigationItems = await _navDiscoveryService.GetNavigationItemsAsync();
+            var navigationByCategory = navigationItems.GroupBy(x => x.Category).ToDictionary(g => g.Key, g => g.ToList());
         
         var model = new DashboardViewModel
         {

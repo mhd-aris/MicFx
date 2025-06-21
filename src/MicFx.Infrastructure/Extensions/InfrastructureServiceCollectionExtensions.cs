@@ -2,7 +2,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using MicFx.Abstractions.Logging;
 using MicFx.Abstractions.Caching;
-using MicFx.Abstractions.Security;
 using MicFx.Infrastructure.Logging;
 
 namespace MicFx.Infrastructure.Extensions;
@@ -46,21 +45,6 @@ public static class InfrastructureServiceCollectionExtensions
     }
 
     /// <summary>
-    /// Registers Infrastructure security implementations
-    /// Replaces the default implementations from Abstractions with real security implementations
-    /// </summary>
-    /// <param name="services">Service collection</param>
-    /// <returns>Service collection for chaining</returns>
-    public static IServiceCollection AddMicFxInfrastructureSecurity(this IServiceCollection services)
-    {
-        // Replace default implementations with real ones
-        // TODO: Implement actual security service when ready
-        // services.Replace(ServiceDescriptor.Singleton<ISecurityService, SecurityService>());
-        
-        return services;
-    }
-
-    /// <summary>
     /// Registers all Infrastructure implementations
     /// This is typically called by the main application to set up all infrastructure services
     /// </summary>
@@ -70,7 +54,6 @@ public static class InfrastructureServiceCollectionExtensions
     {
         services.AddMicFxInfrastructureLogging();
         services.AddMicFxInfrastructureCaching();
-        services.AddMicFxInfrastructureSecurity();
         
         return services;
     }
@@ -83,29 +66,7 @@ public static class InfrastructureServiceCollectionExtensions
     /// <returns>Service collection for chaining</returns>
     public static IServiceCollection AddStructuredLogger<T>(this IServiceCollection services)
     {
-        services.AddTransient<IStructuredLogger<T>>(provider =>
-        {
-            var factory = provider.GetRequiredService<IStructuredLoggerFactory>();
-            return factory.CreateLogger<T>();
-        });
-        
-        return services;
-    }
-
-    /// <summary>
-    /// Extension method for easy registration of structured logger with category name
-    /// </summary>
-    /// <param name="services">Service collection</param>
-    /// <param name="categoryName">Logger category name</param>
-    /// <returns>Service collection for chaining</returns>
-    public static IServiceCollection AddStructuredLogger(this IServiceCollection services, string categoryName)
-    {
-        services.AddTransient<IStructuredLogger>(provider =>
-        {
-            var factory = provider.GetRequiredService<IStructuredLoggerFactory>();
-            return factory.CreateLogger(categoryName);
-        });
-        
+        services.AddTransient<IStructuredLogger<T>>();
         return services;
     }
 } 
