@@ -99,27 +99,7 @@ internal class DefaultCacheService : ICacheService
         throw new NotImplementedException("Caching implementation not registered. Please ensure MicFx.Infrastructure is properly configured.");
     }
 
-    public Task SetAsync<T>(string key, T value, CacheOptions options, CancellationToken cancellationToken = default) where T : class
-    {
-        throw new NotImplementedException("Caching implementation not registered. Please ensure MicFx.Infrastructure is properly configured.");
-    }
-
     public Task RemoveAsync(string key, CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException("Caching implementation not registered. Please ensure MicFx.Infrastructure is properly configured.");
-    }
-
-    public Task RemoveByPatternAsync(string pattern, CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException("Caching implementation not registered. Please ensure MicFx.Infrastructure is properly configured.");
-    }
-
-    public Task<bool> ExistsAsync(string key, CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException("Caching implementation not registered. Please ensure MicFx.Infrastructure is properly configured.");
-    }
-
-    public Task<T> GetOrSetAsync<T>(string key, Func<Task<T>> factory, TimeSpan expiration, CancellationToken cancellationToken = default) where T : class
     {
         throw new NotImplementedException("Caching implementation not registered. Please ensure MicFx.Infrastructure is properly configured.");
     }

@@ -12,21 +12,8 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 🚀 Configure Serilog as early as possible for comprehensive logging
-builder.Services.AddMicFxSerilog(builder.Configuration, builder.Environment, options =>
-{
-    // Environment-specific configuration
-    if (builder.Environment.IsDevelopment())
-    {
-        options.MinimumLevel = Serilog.Events.LogEventLevel.Debug;
-        options.EnableRequestLogging = true;
-    }
-    else
-    {
-        options.MinimumLevel = Serilog.Events.LogEventLevel.Information;
-        options.EnableRequestLogging = false; // Disable request logging in production for performance
-    }
-});
+// 🚀 Configure simplified Serilog logging
+builder.Services.AddMicFxSerilog(builder.Configuration, builder.Environment);
 
 // Use Serilog as primary logging provider
 builder.Host.UseSerilog();
@@ -111,12 +98,8 @@ builder.Services.AddMicFxSwaggerInfrastructure();
 
 var app = builder.Build();
 
-// 📝 Use Serilog request logging (before exception handling for complete request lifecycle logging)
-// Only enable request logging in development for performance reasons
-if (app.Environment.IsDevelopment())
-{
-    app.UseMicFxSerilog();
-}
+// 📝 Use simplified Serilog request logging
+app.UseMicFxSerilog();
 
 // 🛡️ Use MicFx Exception Handling (after Serilog request logging)
 app.UseMicFxExceptionHandling();
