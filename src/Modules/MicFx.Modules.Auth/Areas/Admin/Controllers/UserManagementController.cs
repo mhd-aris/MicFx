@@ -10,8 +10,8 @@ using MicFx.Modules.Auth.Domain.DTOs;
 namespace MicFx.Modules.Auth.Areas.Admin.Controllers
 {
     /// <summary>
-    /// Admin controller untuk mengelola users
-    /// Hanya dapat diakses oleh Admin dan SuperAdmin
+    /// Admin controller for managing users
+    /// Only accessible by Admin and SuperAdmin
     /// </summary>
     [Area("Admin")]
     [Route("admin/auth/users")]

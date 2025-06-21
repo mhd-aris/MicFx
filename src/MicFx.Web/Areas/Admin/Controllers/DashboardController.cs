@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MicFx.Web.Admin.Services;
+using MicFx.SharedKernel.Interfaces;
+using System.Reflection;
 
 namespace MicFx.Web.Areas.Admin.Controllers;
 
@@ -11,16 +13,16 @@ public class DashboardController : Controller
 {
     private readonly ILogger<DashboardController> _logger;
     private readonly AdminNavDiscoveryService _navDiscoveryService;
-    private readonly AdminModuleScanner _moduleScanner;
+    private readonly IServiceProvider _serviceProvider;
 
     public DashboardController(
         ILogger<DashboardController> logger,
         AdminNavDiscoveryService navDiscoveryService,
-        AdminModuleScanner moduleScanner)
+        IServiceProvider serviceProvider)
     {
         _logger = logger;
         _navDiscoveryService = navDiscoveryService;
-        _moduleScanner = moduleScanner;
+        _serviceProvider = serviceProvider;
     }
 
     [HttpGet]
@@ -30,26 +32,33 @@ public class DashboardController : Controller
     {
         _logger.LogInformation("Admin Dashboard accessed");
         
-        // Get module information
-        var scanResults = _moduleScanner.GetScanResults();
-                                var navigationItems = await _navDiscoveryService.GetNavigationItemsAsync();
-            var navigationByCategory = navigationItems.GroupBy(x => x.Category).ToDictionary(g => g.Key, g => g.ToList());
+        // Get real navigation information
+        var navigationItems = await _navDiscoveryService.GetNavigationItemsAsync();
+        var navigationByCategory = navigationItems.GroupBy(x => x.Category).ToDictionary(g => g.Key, g => g.ToList());
         
+        // Get real module information dynamically
+        var contributors = _serviceProvider.GetServices<IAdminNavContributor>().ToList();
+        var moduleAssemblies = contributors
+            .Select(c => c.GetType().Assembly.GetName().Name)
+            .Where(name => !string.IsNullOrEmpty(name) && name.Contains("Modules"))
+            .Distinct()
+            .ToList();
+
         var model = new DashboardViewModel
         {
-            WelcomeMessage = "Selamat datang di MicFx Admin Panel",
+            WelcomeMessage = "Welcome to MicFx Admin Panel",
             CurrentDateTime = DateTime.Now,
             SystemInfo = new SystemInfoViewModel
             {
                 ApplicationName = "MicFx Framework",
-                Version = "1.0.0",
+                Version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "1.0.0",
                 Environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production"
             },
             ModuleInfo = new ModuleInfoViewModel
             {
-                TotalModules = scanResults.ScannedAssemblies,
-                LoadedModules = scanResults.AssemblyNames.ToList(),
-                NavigationContributors = scanResults.Contributors.Count,
+                TotalModules = moduleAssemblies.Count,
+                LoadedModules = moduleAssemblies!,
+                NavigationContributors = contributors.Count,
                 TotalNavigationItems = navigationItems.Count(),
                 NavigationByCategory = navigationByCategory
             }
@@ -80,5 +89,5 @@ public class ModuleInfoViewModel
     public List<string> LoadedModules { get; set; } = new();
     public int NavigationContributors { get; set; }
     public int TotalNavigationItems { get; set; }
-    public Dictionary<string, List<MicFx.SharedKernel.Interfaces.AdminNavItem>> NavigationByCategory { get; set; } = new();
+    public Dictionary<string, List<AdminNavItem>> NavigationByCategory { get; set; } = new();
 } 

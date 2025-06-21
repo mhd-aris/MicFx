@@ -11,8 +11,8 @@ using MicFx.Modules.Auth.Data;
 namespace MicFx.Modules.Auth.Areas.Admin.Controllers
 {
     /// <summary>
-    /// Admin dashboard controller untuk overview sistem auth
-    /// Hanya dapat diakses oleh Admin dan SuperAdmin
+    /// Admin dashboard controller for auth system overview
+    /// Only accessible by Admin and SuperAdmin
     /// </summary>
     [Area("Admin")]
     [Route("admin/auth")]

@@ -3,16 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.IO;
+using System.Collections.Concurrent;
 
 namespace MicFx.Web.Infrastructure;
 
 /// <summary>
 /// Simplified view location expander for MicFx Framework
-/// Uses convention-based discovery for modular view resolution
+/// Uses convention-based discovery for modular view resolution with caching
 /// </summary>
 public class MicFxViewLocationExpander : IViewLocationExpander
 {
-    private static readonly Dictionary<string, string[]> _moduleCache = new();
+    private static readonly Lazy<string[]> _moduleCache = new(ScanModulesOnce);
     private static readonly object _lock = new();
 
     /// <summary>
@@ -47,7 +48,7 @@ public class MicFxViewLocationExpander : IViewLocationExpander
             var cleanController = controllerName.Replace("Controller", "");
             var area = context.Values.TryGetValue("area", out var areaValue) ? areaValue : null;
 
-            // Auto-discover modules and check for matches
+            // Use cached modules - no file system access
             var availableModules = GetAvailableModules();
             var matchingModule = FindMatchingModule(cleanController, availableModules);
 
@@ -94,65 +95,55 @@ public class MicFxViewLocationExpander : IViewLocationExpander
     }
 
     /// <summary>
-    /// Get available modules by scanning the file system
-    /// Results are cached for performance
+    /// Get available modules using cached results - no file system access after first call
     /// </summary>
     private string[] GetAvailableModules()
     {
-        const string cacheKey = "available_modules";
-        
-        if (_moduleCache.TryGetValue(cacheKey, out var cachedModules))
+        return _moduleCache.Value;
+    }
+
+    /// <summary>
+    /// Scan modules once during application startup - static method for lazy initialization
+    /// </summary>
+    private static string[] ScanModulesOnce()
+    {
+        var modules = new List<string>();
+
+        try
         {
-            return cachedModules;
-        }
-
-        lock (_lock)
-        {
-            // Double-check pattern
-            if (_moduleCache.TryGetValue(cacheKey, out cachedModules))
+            // Try to find modules directory relative to current assembly
+            var currentDirectory = Directory.GetCurrentDirectory();
+            var possiblePaths = new[]
             {
-                return cachedModules;
-            }
+                Path.Combine(currentDirectory, "..", "Modules"),           // From MicFx.Web
+                Path.Combine(currentDirectory, "Modules"),                // Direct
+                Path.Combine(currentDirectory, "..", "..", "Modules"),    // Alternative structure
+                Path.Combine(currentDirectory, "src", "Modules")          // From root
+            };
 
-            var modules = new List<string>();
-
-            try
+            foreach (var modulePath in possiblePaths)
             {
-                // Try to find modules directory relative to current assembly
-                var currentDirectory = Directory.GetCurrentDirectory();
-                var possiblePaths = new[]
+                if (Directory.Exists(modulePath))
                 {
-                    Path.Combine(currentDirectory, "..", "Modules"),           // From MicFx.Web
-                    Path.Combine(currentDirectory, "Modules"),                // Direct
-                    Path.Combine(currentDirectory, "..", "..", "Modules"),    // Alternative structure
-                    Path.Combine(currentDirectory, "src", "Modules")          // From root
-                };
+                    var moduleDirectories = Directory.GetDirectories(modulePath, "MicFx.Modules.*")
+                        .Select(dir => Path.GetFileName(dir))
+                        .Where(name => name.StartsWith("MicFx.Modules."))
+                        .Select(name => name.Substring("MicFx.Modules.".Length))
+                        .ToArray();
 
-                foreach (var modulePath in possiblePaths)
-                {
-                    if (Directory.Exists(modulePath))
-                    {
-                        var moduleDirectories = Directory.GetDirectories(modulePath, "MicFx.Modules.*")
-                            .Select(dir => Path.GetFileName(dir))
-                            .Where(name => name.StartsWith("MicFx.Modules."))
-                            .Select(name => name.Substring("MicFx.Modules.".Length))
-                            .ToArray();
-
-                        modules.AddRange(moduleDirectories);
-                        break; // Use first found path
-                    }
+                    modules.AddRange(moduleDirectories);
+                    break; // Use first found path
                 }
             }
-            catch
-            {
-                // If file system access fails, return empty array
-                // This prevents exceptions during view resolution
-            }
-
-            var result = modules.Distinct().ToArray();
-            _moduleCache[cacheKey] = result;
-            return result;
         }
+        catch
+        {
+            // If file system access fails, return known modules
+            // This prevents exceptions during view resolution
+            modules.AddRange(new[] { "HelloWorld", "Auth" });
+        }
+
+        return modules.Distinct().ToArray();
     }
 
     /// <summary>

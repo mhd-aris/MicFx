@@ -15,14 +15,14 @@ namespace MicFx.Web.Areas.Admin.Controllers
     public class DiagnosticsController : Controller
     {
         private readonly AdminNavDiscoveryService _navDiscoveryService;
-        private readonly AdminModuleScanner _moduleScanner;
+        private readonly IServiceProvider _serviceProvider;
 
         public DiagnosticsController(
             AdminNavDiscoveryService navDiscoveryService,
-            AdminModuleScanner moduleScanner)
+            IServiceProvider serviceProvider)
         {
             _navDiscoveryService = navDiscoveryService;
-            _moduleScanner = moduleScanner;
+            _serviceProvider = serviceProvider;
         }
 
         /// <summary>
@@ -34,9 +34,31 @@ namespace MicFx.Web.Areas.Admin.Controllers
             ViewData["Title"] = "Admin Navigation Diagnostics";
 
             var navigationItems = await _navDiscoveryService.GetNavigationItemsAsync();
+            
+            // Get real contributor information
+            var contributors = _serviceProvider.GetServices<IAdminNavContributor>().ToList();
+            var contributorInfos = contributors.Select(contributor => new ContributorInfo
+            {
+                TypeName = contributor.GetType().Name,
+                AssemblyName = contributor.GetType().Assembly.GetName().Name ?? "Unknown",
+                Namespace = contributor.GetType().Namespace ?? "Unknown"
+            }).ToList();
+
+            // Get real assembly information
+            var assemblies = contributors
+                .Select(c => c.GetType().Assembly.GetName().Name)
+                .Where(name => !string.IsNullOrEmpty(name))
+                .Distinct()
+                .ToList();
+
             var model = new DiagnosticsViewModel
             {
-                ScanResults = _moduleScanner.GetScanResults(),
+                ScanResults = new AdminScanResult
+                {
+                    ScannedAssemblies = assemblies.Count,
+                    AssemblyNames = assemblies!,
+                    Contributors = contributorInfos
+                },
                 NavigationItems = navigationItems,
                 NavigationByCategory = navigationItems.GroupBy(x => x.Category).ToDictionary(g => g.Key, g => g.ToList()),
                 UserInfo = new UserDiagnosticInfo
@@ -77,12 +99,33 @@ namespace MicFx.Web.Areas.Admin.Controllers
         }
 
         /// <summary>
-        /// Get scan results as JSON
+        /// Get scan results as JSON with real data
         /// </summary>
         [HttpGet("api/scan-results")]
         public IActionResult GetScanResultsJson()
         {
-            var scanResults = _moduleScanner.GetScanResults();
+            // Get real contributor information
+            var contributors = _serviceProvider.GetServices<IAdminNavContributor>().ToList();
+            var contributorInfos = contributors.Select(contributor => new ContributorInfo
+            {
+                TypeName = contributor.GetType().Name,
+                AssemblyName = contributor.GetType().Assembly.GetName().Name ?? "Unknown",
+                Namespace = contributor.GetType().Namespace ?? "Unknown"
+            }).ToList();
+
+            // Get real assembly information
+            var assemblies = contributors
+                .Select(c => c.GetType().Assembly.GetName().Name)
+                .Where(name => !string.IsNullOrEmpty(name))
+                .Distinct()
+                .ToList();
+
+            var scanResults = new AdminScanResult
+            {
+                ScannedAssemblies = assemblies.Count,
+                AssemblyNames = assemblies!,
+                Contributors = contributorInfos
+            };
             return Json(scanResults);
         }
 

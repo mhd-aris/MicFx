@@ -1,94 +1,52 @@
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using MicFx.Web.Admin.Services;
+using Microsoft.Extensions.Caching.Memory;
 using MicFx.SharedKernel.Interfaces;
+using MicFx.Web.Admin.Services;
 
 namespace MicFx.Web.Admin.Extensions
 {
     /// <summary>
     /// Extension methods for registering admin services
+    /// Simple and minimal approach - no over-engineering
     /// </summary>
     public static class AdminServiceExtensions
     {
         /// <summary>
-        /// Adds admin navigation services to the service collection with auto-discovery
+        /// Adds admin navigation services to the service collection with manual registration
         /// </summary>
         /// <param name="services">Service collection</param>
-        /// <param name="enableAutoDiscovery">Enable automatic discovery of navigation contributors</param>
         /// <returns>Service collection for chaining</returns>
-        public static IServiceCollection AddAdminNavigation(this IServiceCollection services, bool enableAutoDiscovery = true)
+        public static IServiceCollection AddAdminNavigation(this IServiceCollection services)
         {
             // Register core services
             services.AddMemoryCache(); // Required for caching
             services.AddScoped<AdminNavDiscoveryService>();
-            services.AddSingleton<AdminModuleScanner>();
             
-            // Auto-discovery of navigation contributors
-            if (enableAutoDiscovery)
-            {
-                var serviceProvider = services.BuildServiceProvider();
-                var scanner = serviceProvider.GetRequiredService<AdminModuleScanner>();
-                var contributorsFound = scanner.ScanAndRegisterContributors(services);
-                
-                // Log the discovery results
-                var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
-                var logger = loggerFactory?.CreateLogger("AdminServiceExtensions");
-                logger?.LogInformation("🎯 Auto-discovery enabled: {ContributorsFound} navigation contributors registered", contributorsFound);
-            }
+            // Register known module contributors - fast and predictable
+            services.AddModuleAdminContributors();
             
             return services;
         }
         
         /// <summary>
-        /// Adds an admin navigation contributor to the service collection
-        /// </summary>
-        /// <typeparam name="T">Type of the navigation contributor</typeparam>
-        /// <param name="services">Service collection</param>
-        /// <returns>Service collection for chaining</returns>
-        public static IServiceCollection AddAdminNavContributor<T>(this IServiceCollection services)
-            where T : class, IAdminNavContributor
-        {
-            services.AddTransient<IAdminNavContributor, T>();
-            return services;
-        }
-        
-        /// <summary>
-        /// Adds multiple admin navigation contributors to the service collection
+        /// Registers admin navigation contributors from known modules
+        /// Manual registration for better performance and predictability
         /// </summary>
         /// <param name="services">Service collection</param>
-        /// <param name="contributorTypes">Types of navigation contributors</param>
         /// <returns>Service collection for chaining</returns>
-        public static IServiceCollection AddAdminNavContributors(this IServiceCollection services, params Type[] contributorTypes)
+        public static IServiceCollection AddModuleAdminContributors(this IServiceCollection services)
         {
-            foreach (var contributorType in contributorTypes)
-            {
-                if (typeof(IAdminNavContributor).IsAssignableFrom(contributorType))
-                {
-                    services.AddTransient(typeof(IAdminNavContributor), contributorType);
-                }
-            }
+            // Manual registration of module admin contributors
+            // This approach is fast, predictable, and avoids reflection overhead
             
-            return services;
-        }
-        
-        /// <summary>
-        /// Automatically discovers and registers admin navigation contributors from assemblies
-        /// </summary>
-        /// <param name="services">Service collection</param>
-        /// <param name="assemblies">Assemblies to scan for contributors</param>
-        /// <returns>Service collection for chaining</returns>
-        public static IServiceCollection AddAdminNavContributorsFromAssemblies(this IServiceCollection services, params System.Reflection.Assembly[] assemblies)
-        {
-            foreach (var assembly in assemblies)
-            {
-                var contributorTypes = assembly.GetTypes()
-                    .Where(t => t.IsClass && !t.IsAbstract && typeof(IAdminNavContributor).IsAssignableFrom(t));
-                
-                foreach (var contributorType in contributorTypes)
-                {
-                    services.AddTransient(typeof(IAdminNavContributor), contributorType);
-                }
-            }
+            // HelloWorld Module Contributor
+            services.AddTransient<IAdminNavContributor, MicFx.Modules.HelloWorld.Areas.Admin.HelloWorldAdminNavContributor>();
+            
+            // Auth Module Contributor  
+            services.AddTransient<IAdminNavContributor, MicFx.Modules.Auth.Areas.Admin.AuthAdminNavContributor>();
+            
+            // Future modules should be added here manually for better performance
+            // Example: services.AddTransient<IAdminNavContributor, SomeModule.SomeAdminNavContributor>();
             
             return services;
         }
