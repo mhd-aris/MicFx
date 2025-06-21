@@ -7,20 +7,20 @@ using System.ComponentModel.DataAnnotations;
 namespace MicFx.Core.Configuration;
 
 /// <summary>
-/// Base class for module configuration implementation with validation support
+/// Simplified base class for module configuration with startup-time loading and validation
+/// SIMPLIFIED: Removed hot reload and change detection for better stability and predictability
 /// </summary>
 /// <typeparam name="T">Type of configuration class</typeparam>
 public abstract class ModuleConfigurationBase<T> : IModuleConfiguration<T> where T : class, new()
 {
     private readonly IConfiguration _configuration;
     private readonly ILogger<ModuleConfigurationBase<T>> _logger;
-    private T _value = new();
 
     protected ModuleConfigurationBase(IConfiguration configuration, ILogger<ModuleConfigurationBase<T>> logger)
     {
         _configuration = configuration;
         _logger = logger;
-        LoadConfiguration();
+        Value = LoadConfiguration();
     }
 
     /// <summary>
@@ -39,25 +39,16 @@ public abstract class ModuleConfigurationBase<T> : IModuleConfiguration<T> where
     public virtual bool IsRequired => true;
 
     /// <summary>
-    /// Parsed configuration value
+    /// Loaded configuration value (immutable after startup)
+    /// SIMPLIFIED: No change tracking, loaded once at startup
     /// </summary>
-    public T Value
-    {
-        get => _value;
-        set
-        {
-            var oldValue = _value;
-            _value = value;
-
-            _logger.LogInformation("Configuration changed for module {ModuleName}: {OldValue} -> {NewValue}",
-                ModuleName, oldValue, value);
-        }
-    }
+    public T Value { get; private set; }
 
     /// <summary>
-    /// Load configuration from IConfiguration
+    /// Load configuration from IConfiguration at startup
+    /// SIMPLIFIED: Load once at startup, no hot reload capability
     /// </summary>
-    protected virtual void LoadConfiguration()
+    private T LoadConfiguration()
     {
         try
         {
@@ -74,10 +65,9 @@ public abstract class ModuleConfigurationBase<T> : IModuleConfiguration<T> where
                 var configValue = section.Get<T>();
                 if (configValue != null)
                 {
-                    Value = configValue;
-
                     _logger.LogInformation("Configuration loaded for module {ModuleName} from section {SectionName}",
                         ModuleName, SectionName);
+                    return configValue;
                 }
                 else if (IsRequired)
                 {
@@ -85,6 +75,10 @@ public abstract class ModuleConfigurationBase<T> : IModuleConfiguration<T> where
                         $"Failed to bind configuration section '{SectionName}' to type {typeof(T).Name}");
                 }
             }
+
+            // Return default instance for optional configurations
+            _logger.LogInformation("Using default configuration for optional module {ModuleName}", ModuleName);
+            return new T();
         }
         catch (Exception ex) when (!(ex is ConfigurationException))
         {
@@ -106,7 +100,7 @@ public abstract class ModuleConfigurationBase<T> : IModuleConfiguration<T> where
     }
 
     /// <summary>
-    /// Type-specific validation for value T using Data Annotations
+    /// Validate configuration value using Data Annotations and custom rules
     /// </summary>
     /// <param name="value">Value to validate</param>
     /// <returns>Validation result</returns>
@@ -119,8 +113,10 @@ public abstract class ModuleConfigurationBase<T> : IModuleConfiguration<T> where
 
         if (!isValid)
         {
-            var errors = validationResults.SelectMany(r => r.ErrorMessage != null ? new[] { r.ErrorMessage } : Array.Empty<string>())
-                                         .ToList();
+            var errors = validationResults
+                .Where(r => !string.IsNullOrEmpty(r.ErrorMessage))
+                .Select(r => r.ErrorMessage!)
+                .ToList();
 
             _logger.LogWarning("Configuration validation failed for module {ModuleName}: {ValidationErrors}",
                 ModuleName, string.Join(", ", errors));
@@ -128,7 +124,7 @@ public abstract class ModuleConfigurationBase<T> : IModuleConfiguration<T> where
             return new ValidationResult($"Validation failed for module '{ModuleName}': {string.Join(", ", errors)}");
         }
 
-        // Tambahkan validasi custom jika ada
+        // Apply custom validation rules if any
         var customValidation = ValidateCustomRules(value);
         if (customValidation != ValidationResult.Success)
         {
@@ -147,22 +143,5 @@ public abstract class ModuleConfigurationBase<T> : IModuleConfiguration<T> where
     protected virtual ValidationResult ValidateCustomRules(T value)
     {
         return ValidationResult.Success!;
-    }
-
-    /// <summary>
-    /// Reload configuration from configuration source
-    /// </summary>
-    public virtual void Reload()
-    {
-        _logger.LogInformation("Reloading configuration for module {ModuleName}", ModuleName);
-        LoadConfiguration();
-    }
-
-    /// <summary>
-    /// Get current configuration value snapshot for change detection
-    /// </summary>
-    public virtual object? GetCurrentValueSnapshot()
-    {
-        return Value;
     }
 }

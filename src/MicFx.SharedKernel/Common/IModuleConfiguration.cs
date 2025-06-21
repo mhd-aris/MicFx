@@ -3,7 +3,8 @@ using System.ComponentModel.DataAnnotations;
 namespace MicFx.SharedKernel.Common;
 
 /// <summary>
-/// Base interface for module configuration that can be validated
+/// Base interface for module configuration with startup-time loading and validation
+/// SIMPLIFIED: Removed hot reload and change detection for better stability
 /// </summary>
 public interface IModuleConfiguration
 {
@@ -27,28 +28,20 @@ public interface IModuleConfiguration
     /// Whether this configuration is required
     /// </summary>
     bool IsRequired { get; }
-
-    /// <summary>
-    /// Get current configuration value snapshot for change detection
-    /// </summary>
-    object? GetCurrentValueSnapshot();
-
-    /// <summary>
-    /// Reload configuration from source
-    /// </summary>
-    void Reload();
 }
 
 /// <summary>
 /// Generic interface for strongly-typed module configuration
+/// SIMPLIFIED: Immutable configuration loaded at startup
 /// </summary>
 /// <typeparam name="T">Type of configuration class</typeparam>
 public interface IModuleConfiguration<T> : IModuleConfiguration where T : class
 {
     /// <summary>
-    /// Parsed configuration value
+    /// Loaded configuration value (immutable after startup)
+    /// SIMPLIFIED: Read-only after initial load
     /// </summary>
-    T Value { get; set; }
+    T Value { get; }
 
     /// <summary>
     /// Type-specific validation for T
