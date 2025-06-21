@@ -84,6 +84,12 @@ namespace MicFx.Core.Extensions
             services.AddSingleton<IModuleServiceConfigurator>(sp =>
                 new ModuleServiceConfigurator(moduleInstances, sp.GetRequiredService<ModuleDependencyResolver>()));
 
+            // ✅ PERBAIKAN: Panggil ConfigureServices untuk semua modules
+            var tempServiceProvider = services.BuildServiceProvider();
+            var serviceConfigurator = tempServiceProvider.GetRequiredService<IModuleServiceConfigurator>();
+            serviceConfigurator.ConfigureServices(services);
+            tempServiceProvider.Dispose();
+
             return services;
         }
 
@@ -457,7 +463,7 @@ namespace MicFx.Core.Extensions
 
                 var moduleStates = _lifecycleManager.GetAllModuleStates();
                 var totalModules = moduleStates.Count;
-                var healthyModules = moduleStates.Values.Count(s => s.State == ModuleState.Started);
+                var healthyModules = moduleStates.Values.Count(s => s.State == ModuleState.Loaded);
                 var errorModules = moduleStates.Values.Count(s => s.State == ModuleState.Error);
 
                 var data = new Dictionary<string, object>

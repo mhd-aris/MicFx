@@ -108,7 +108,7 @@ namespace MicFx.Core.Modularity
         }
 
         /// <summary>
-        /// Starts a specific module
+        /// Starts a specific module (simplified)
         /// </summary>
         public async Task StartModuleAsync(string moduleName, CancellationToken cancellationToken = default)
         {
@@ -118,9 +118,9 @@ namespace MicFx.Core.Modularity
             }
 
             var moduleState = _moduleStates[moduleName];
-            if (moduleState.State == ModuleState.Started)
+            if (moduleState.State == ModuleState.Loaded)
             {
-                _logger.LogWarning("Module {ModuleName} is already started", moduleName);
+                _logger.LogWarning("Module {ModuleName} is already loaded", moduleName);
                 return;
             }
 
@@ -130,47 +130,32 @@ namespace MicFx.Core.Modularity
 
             try
             {
-                // Set timeout - use default or get from hot reload manifest
-                var timeoutSeconds = 30; // Default timeout
-                if (module.Manifest is IHotReloadModuleManifest hotReloadManifest)
-                {
-                    timeoutSeconds = hotReloadManifest.StartupTimeoutSeconds;
-                }
-                
-                operationCts.CancelAfter(TimeSpan.FromSeconds(timeoutSeconds));
+                // Simple timeout
+                operationCts.CancelAfter(TimeSpan.FromSeconds(30));
 
                 // Ensure dependencies are started first
                 await EnsureDependenciesStartedAsync(moduleName, operationCts.Token);
 
-                // SIMPLIFIED: Only two essential states - Loading and Started
+                // SIMPLIFIED: Loading -> Loaded
                 await TransitionModuleStateAsync(moduleName, ModuleState.Loading, operationCts.Token);
 
-                // Single lifecycle hook - OnStartingAsync
+                // Simplified lifecycle hook - InitializeAsync
                 if (module is IModuleLifecycle lifecycleModule)
                 {
-                    await lifecycleModule.OnStartingAsync(operationCts.Token);
+                    await lifecycleModule.InitializeAsync(operationCts.Token);
                 }
 
                 // Perform actual module startup
                 await PerformModuleStartupAsync(module, operationCts.Token);
 
-                await TransitionModuleStateAsync(moduleName, ModuleState.Started, operationCts.Token);
+                await TransitionModuleStateAsync(moduleName, ModuleState.Loaded, operationCts.Token);
 
-                // Single post-start hook - OnStartedAsync
-                if (module is IModuleLifecycle lifecycleModulePost)
-                {
-                    await lifecycleModulePost.OnStartedAsync(operationCts.Token);
-                }
-
-                _logger.LogInformation("Module {ModuleName} started successfully", moduleName);
+                _logger.LogInformation("Module {ModuleName} loaded successfully", moduleName);
             }
             catch (OperationCanceledException) when (operationCts.Token.IsCancellationRequested)
             {
                 await TransitionModuleStateAsync(moduleName, ModuleState.Error, CancellationToken.None);
-                var timeoutSeconds = module.Manifest is IHotReloadModuleManifest hotReloadManifest ? 
-                    hotReloadManifest.StartupTimeoutSeconds : 30;
-                _logger.LogError("Module {ModuleName} startup timed out after {TimeoutSeconds} seconds",
-                    moduleName, timeoutSeconds);
+                _logger.LogError("Module {ModuleName} startup timed out after 30 seconds", moduleName);
                 throw new ModuleException($"Module {moduleName} startup timed out", "LifecycleManager");
             }
             catch (Exception ex)
@@ -186,7 +171,7 @@ namespace MicFx.Core.Modularity
         }
 
         /// <summary>
-        /// Stops a specific module
+        /// Stops a specific module (simplified)
         /// </summary>
         public async Task StopModuleAsync(string moduleName, CancellationToken cancellationToken = default)
         {
@@ -197,9 +182,9 @@ namespace MicFx.Core.Modularity
             }
 
             var moduleState = _moduleStates[moduleName];
-            if (moduleState.State == ModuleState.Stopped || moduleState.State == ModuleState.NotLoaded)
+            if (moduleState.State == ModuleState.NotLoaded)
             {
-                _logger.LogWarning("Module {ModuleName} is already stopped", moduleName);
+                _logger.LogWarning("Module {ModuleName} is already not loaded", moduleName);
                 return;
             }
 
@@ -207,22 +192,16 @@ namespace MicFx.Core.Modularity
 
             try
             {
-                await TransitionModuleStateAsync(moduleName, ModuleState.Stopping, cancellationToken);
-
+                // Simplified lifecycle hook - ShutdownAsync
                 if (module is IModuleLifecycle lifecycleModule)
                 {
-                    await lifecycleModule.OnStoppingAsync(cancellationToken);
+                    await lifecycleModule.ShutdownAsync(cancellationToken);
                 }
 
                 // Stop dependent modules first
                 await StopDependentModulesAsync(moduleName, cancellationToken);
 
-                await TransitionModuleStateAsync(moduleName, ModuleState.Stopped, cancellationToken);
-
-                if (module is IModuleLifecycle lifecycleModule2)
-                {
-                    await lifecycleModule2.OnStoppedAsync(cancellationToken);
-                }
+                await TransitionModuleStateAsync(moduleName, ModuleState.NotLoaded, cancellationToken);
 
                 _logger.LogInformation("Module {ModuleName} stopped successfully", moduleName);
             }
@@ -246,63 +225,7 @@ namespace MicFx.Core.Modularity
             _logger.LogInformation("Module {ModuleName} restarted successfully", moduleName);
         }
 
-        /// <summary>
-        /// Reloads a module (for hot reload)
-        /// </summary>
-        public async Task ReloadModuleAsync(string moduleName, CancellationToken cancellationToken = default)
-        {
-            if (!_moduleInstances.ContainsKey(moduleName))
-            {
-                throw new ModuleException($"Module {moduleName} is not registered", "LifecycleManager");
-            }
 
-            var module = _moduleInstances[moduleName];
-            
-            // Check if module supports hot reload
-            if (module.Manifest is not IHotReloadModuleManifest hotReloadManifest || !hotReloadManifest.SupportsHotReload)
-            {
-                throw new ModuleException($"Module {moduleName} does not support hot reload", "LifecycleManager");
-            }
-
-            if (module is not IModuleHotReload hotReloadModule)
-            {
-                throw new ModuleException($"Module {moduleName} does not implement IModuleHotReload", "LifecycleManager");
-            }
-
-            try
-            {
-                _logger.LogInformation("Hot reloading module {ModuleName}", moduleName);
-
-                // Check if module can be reloaded
-                if (!await hotReloadModule.CanReloadAsync())
-                {
-                    throw new ModuleException($"Module {moduleName} is not in a safe state for reload", "LifecycleManager");
-                }
-
-                await TransitionModuleStateAsync(moduleName, ModuleState.Reloading, cancellationToken);
-
-                await hotReloadModule.OnReloadingAsync(cancellationToken);
-
-                // Get reloadable resources
-                var resources = await hotReloadModule.GetReloadResourcesAsync(cancellationToken);
-                _logger.LogInformation("Reloading {ResourceCount} resources for module {ModuleName}",
-    resources.Count(), moduleName);
-
-                // Perform actual reload logic here
-                // This would involve reloading assemblies, configurations, etc.
-
-                await hotReloadModule.OnReloadedAsync(cancellationToken);
-
-                await TransitionModuleStateAsync(moduleName, ModuleState.Started, cancellationToken);
-
-                _logger.LogInformation("Module {ModuleName} hot reloaded successfully", moduleName);
-            }
-            catch (Exception ex)
-            {
-                await HandleModuleErrorAsync(moduleName, ex);
-                throw;
-            }
-        }
 
         /// <summary>
         /// Gets status of all modules
@@ -361,7 +284,7 @@ namespace MicFx.Core.Modularity
             var moduleState = _moduleStates[moduleName];
             return new ModuleHealthDetails
             {
-                Status = moduleState.State == ModuleState.Started ? ModuleHealthStatus.Healthy : ModuleHealthStatus.Unhealthy,
+                Status = moduleState.State == ModuleState.Loaded ? ModuleHealthStatus.Healthy : ModuleHealthStatus.Unhealthy,
                 Description = $"Module state: {moduleState.State}",
                 Data = new Dictionary<string, object>
                 {
@@ -407,18 +330,8 @@ namespace MicFx.Core.Modularity
 
             _logger.LogError(error, "Error in module {ModuleName}", moduleName);
 
-            var module = _moduleInstances[moduleName];
-            if (module is IModuleLifecycle lifecycleModule)
-            {
-                try
-                {
-                    await lifecycleModule.OnErrorAsync(error, CancellationToken.None);
-                }
-                catch (Exception lifecycleEx)
-                {
-                    _logger.LogError(lifecycleEx, "Error in module {ModuleName} error handler", moduleName);
-                }
-            }
+            // Simplified error handling - no complex lifecycle hooks
+            // Module will need to be restarted manually
         }
 
         private async Task EnsureDependenciesStartedAsync(string moduleName, CancellationToken cancellationToken)
@@ -427,7 +340,7 @@ namespace MicFx.Core.Modularity
 
             foreach (var dependency in dependencies)
             {
-                if (_moduleStates.TryGetValue(dependency, out var depState) && depState.State != ModuleState.Started)
+                if (_moduleStates.TryGetValue(dependency, out var depState) && depState.State != ModuleState.Loaded)
                 {
                     await StartModuleAsync(dependency, cancellationToken);
                 }
@@ -440,7 +353,7 @@ namespace MicFx.Core.Modularity
 
             foreach (var dependent in dependents)
             {
-                if (_moduleStates.TryGetValue(dependent, out var depState) && depState.State == ModuleState.Started)
+                if (_moduleStates.TryGetValue(dependent, out var depState) && depState.State == ModuleState.Loaded)
                 {
                     await StopModuleAsync(dependent, cancellationToken);
                 }

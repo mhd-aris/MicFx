@@ -74,36 +74,5 @@ public class Manifest : ModuleManifestBase
     /// </summary>
     public override bool IsCritical => false;
 
-    /// <summary>
-    /// Module capabilities for runtime discovery
-    /// </summary>
-    public override string[] Capabilities => new[]
-    {
-        "api-endpoints",
-        "structured-logging-demo",
-        "exception-handling-demo",
-        "domain-modeling",
-        "service-layer-pattern",
-        "clean-architecture-demo",
-        "framework-integration-validation"
-    };
 
-    /// <summary>
-    /// Optional dependencies that enhance functionality if available
-    /// </summary>
-    public override string[] OptionalDependencies => new[]
-    {
-        "MicFx.Modules.Auth"           // Authentication for enhanced demos
-    };
-
-    /// <summary>
-    /// Whether this module supports hot reload
-    /// Enabled for PoC to demonstrate framework capabilities
-    /// </summary>
-    public override bool SupportsHotReload => true;
-
-    /// <summary>
-    /// Startup timeout for module initialization
-    /// </summary>
-    public override int StartupTimeoutSeconds => 30;
 }

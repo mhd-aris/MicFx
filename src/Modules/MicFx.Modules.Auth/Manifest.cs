@@ -12,23 +12,11 @@ namespace MicFx.Modules.Auth
         public override string Description => "Core authentication module untuk MicFx framework dengan ASP.NET Core Identity";
         public override string Author => "MicFx Team";
 
-        // Enhanced dependency management properties
+        // Essential properties
         public override string[] Dependencies => new string[] { }; // Core framework dependencies handled automatically
-        public override string[] OptionalDependencies => new string[] { }; // No optional dependencies
         public override string MinimumFrameworkVersion => "1.0.0";
-        public override int Priority => 10; // High priority as security module
+        public override int Priority => 300; // High priority as security module (higher number = loads first)
         public override bool IsCritical => true; // Critical for system security
-
-        // Lifecycle management properties
-        public override bool SupportsHotReload => false; // Auth module should not be hot-reloaded for security
-        public override int StartupTimeoutSeconds => 60; // Allow more time for database setup
-        public override string[] Capabilities => new string[] {
-            "authentication",
-            "authorization",
-            "user-management",
-            "identity",
-            "security"
-        };
         public override string[] Tags => new string[] { "auth", "security", "identity", "core" };
 
         /// <summary>

@@ -1,7 +1,8 @@
 namespace MicFx.SharedKernel.Modularity;
 
 /// <summary>
-/// Enum that describes the lifecycle status of a module
+/// Simplified enum that describes the lifecycle status of a module
+/// Removed complex states for simplicity and maintainability
 /// </summary>
 public enum ModuleState
 {
@@ -16,110 +17,35 @@ public enum ModuleState
     Loading = 1,
 
     /// <summary>
-    /// Module has been loaded but not yet started
+    /// Module has been loaded and is ready for use
     /// </summary>
     Loaded = 2,
 
     /// <summary>
-    /// Module is in the startup process
-    /// </summary>
-    Starting = 3,
-
-    /// <summary>
-    /// Module is running and ready for use
-    /// </summary>
-    Started = 4,
-
-    /// <summary>
-    /// Module is in the shutdown process
-    /// </summary>
-    Stopping = 5,
-
-    /// <summary>
-    /// Module has been stopped
-    /// </summary>
-    Stopped = 6,
-
-    /// <summary>
     /// Module is in an error state
     /// </summary>
-    Error = 7,
-
-    /// <summary>
-    /// Module is in the reload process (hot reload)
-    /// </summary>
-    Reloading = 8
+    Error = 3
 }
 
 /// <summary>
-/// Interface for modules that support lifecycle events
+/// Simplified interface for modules that support basic lifecycle events
+/// Reduced from 8 hooks to 2 essential hooks
 /// </summary>
 public interface IModuleLifecycle
 {
     /// <summary>
-    /// Called when the module is being loaded
+    /// Called when the module is being initialized
     /// </summary>
-    Task OnLoadingAsync(CancellationToken cancellationToken = default);
+    Task InitializeAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Called when the module has been loaded
+    /// Called when the module is being shut down
     /// </summary>
-    Task OnLoadedAsync(CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Called when the module is starting
-    /// </summary>
-    Task OnStartingAsync(CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Called when the module has started
-    /// </summary>
-    Task OnStartedAsync(CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Called when the module is stopping
-    /// </summary>
-    Task OnStoppingAsync(CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Called when the module has stopped
-    /// </summary>
-    Task OnStoppedAsync(CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Called when the module encounters an error
-    /// </summary>
-    Task OnErrorAsync(Exception error, CancellationToken cancellationToken = default);
+    Task ShutdownAsync(CancellationToken cancellationToken = default);
 }
 
 /// <summary>
-/// Interface for modules that support hot reload
-/// </summary>
-public interface IModuleHotReload
-{
-    /// <summary>
-    /// Called when the module is being reloaded
-    /// </summary>
-    Task OnReloadingAsync(CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Called when the module has been reloaded
-    /// </summary>
-    Task OnReloadedAsync(CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Gets resources that need to be cleaned up before reload
-    /// </summary>
-    Task<IEnumerable<IDisposable>> GetReloadResourcesAsync(CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Validates whether the module is in a safe state for reload
-    /// </summary>
-    Task<bool> CanReloadAsync(CancellationToken cancellationToken = default);
-}
-
-/// <summary>
-/// Interface for module health check
+/// Interface for module health check (simplified)
 /// </summary>
 public interface IModuleHealthCheck
 {

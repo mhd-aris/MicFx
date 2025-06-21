@@ -113,9 +113,6 @@ builder.Services.AddMicFxModuleHealthChecks();
 // 🔧 Add MicFx Swagger Infrastructure (with smart auto-routing support)
 builder.Services.AddMicFxSwaggerInfrastructure();
 
-// 🔧 Cookie authentication sudah dikonfigurasi di Auth module
-// Tidak perlu duplikasi konfigurasi di sini untuk menghindari konflik
-
 var app = builder.Build();
 
 // 📝 Use Serilog request logging (before exception handling for complete request lifecycle logging)

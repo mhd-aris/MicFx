@@ -24,11 +24,11 @@
 #### **Step 1: Clone Repository**
 ```bash
 # Clone repository
-git clone https://github.com/your-org/setup-micfx.git
+git clone https://maribelajardev@dev.azure.com/maribelajardev/micfx/_git/micfx
 cd setup-micfx
 
 # Atau dengan SSH
-git clone git@github.com:your-org/setup-micfx.git
+git clone git@ssh.dev.azure.com:v3/maribelajardev/micfx/micfx
 cd setup-micfx
 ```
 

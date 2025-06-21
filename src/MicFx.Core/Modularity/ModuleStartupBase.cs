@@ -359,67 +359,20 @@ namespace MicFx.Core.Modularity
 
 
         /// <summary>
-        /// Called before module is loaded. Override for custom implementation.
+        /// Called when module is being initialized. Override for custom implementation.
         /// </summary>
-        public virtual async Task OnLoadingAsync(CancellationToken cancellationToken = default)
+        public virtual async Task InitializeAsync(CancellationToken cancellationToken = default)
         {
             // Default implementation - does nothing
             await Task.CompletedTask;
         }
 
         /// <summary>
-        /// Called after module is successfully loaded. Override for custom implementation.
+        /// Called when module is being shut down. Override for custom implementation.
         /// </summary>
-        public virtual async Task OnLoadedAsync(CancellationToken cancellationToken = default)
+        public virtual async Task ShutdownAsync(CancellationToken cancellationToken = default)
         {
             // Default implementation - does nothing
-            await Task.CompletedTask;
-        }
-
-        /// <summary>
-        /// Called before module is started. Override for custom implementation.
-        /// </summary>
-        public virtual async Task OnStartingAsync(CancellationToken cancellationToken = default)
-        {
-            // Default implementation - does nothing
-            await Task.CompletedTask;
-        }
-
-        /// <summary>
-        /// Called after module is successfully started. Override for custom implementation.
-        /// </summary>
-        public virtual async Task OnStartedAsync(CancellationToken cancellationToken = default)
-        {
-            // Default implementation - does nothing
-            await Task.CompletedTask;
-        }
-
-        /// <summary>
-        /// Called before module is stopped. Override for custom implementation.
-        /// </summary>
-        public virtual async Task OnStoppingAsync(CancellationToken cancellationToken = default)
-        {
-            // Default implementation - does nothing
-            await Task.CompletedTask;
-        }
-
-        /// <summary>
-        /// Called after module is successfully stopped. Override for custom implementation.
-        /// </summary>
-        public virtual async Task OnStoppedAsync(CancellationToken cancellationToken = default)
-        {
-            // Default implementation - does nothing
-            await Task.CompletedTask;
-        }
-
-        /// <summary>
-        /// Called when module encounters an error. Override for custom implementation.
-        /// </summary>
-        public virtual async Task OnErrorAsync(Exception error, CancellationToken cancellationToken = default)
-        {
-            // Default implementation - log error
-            _logger?.LogError(error, "❌ Module {ModuleName} encountered an error: {ErrorMessage}",
-                Manifest.Name, error.Message);
             await Task.CompletedTask;
         }
 
