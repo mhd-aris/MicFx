@@ -55,7 +55,7 @@ public class Manifest : ModuleManifestBase
     /// Module dependencies - HelloWorld as PoC has no inter-module dependencies
     /// Demonstrates zero-dependency module architecture
     /// </summary>
-    public override string[] Dependencies => new string[0];
+    public override string[]? Dependencies => Array.Empty<string>();
 
     /// <summary>
     /// Minimum framework version required

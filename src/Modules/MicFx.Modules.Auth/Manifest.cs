@@ -13,7 +13,7 @@ namespace MicFx.Modules.Auth
         public override string Author => "MicFx Team";
 
         // Essential properties
-        public override string[] Dependencies => new string[] { }; // Core framework dependencies handled automatically
+        public override string[]? Dependencies => Array.Empty<string>(); // Core framework dependencies handled automatically
         public override string MinimumFrameworkVersion => "1.0.0";
         public override int Priority => 300; // High priority as security module (higher number = loads first)
         public override bool IsCritical => true; // Critical for system security

@@ -29,7 +29,7 @@ namespace MicFx.SharedKernel.Modularity
         /// <summary>
         /// Required dependencies (required)
         /// </summary>
-        string[] Dependencies { get; }
+        string[]? Dependencies { get; }
 
         /// <summary>
         /// Whether module is enabled (default: true)

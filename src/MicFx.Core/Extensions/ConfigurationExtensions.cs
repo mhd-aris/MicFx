@@ -26,7 +26,7 @@ public static class ConfigurationExtensions
         configureOptions?.Invoke(options);
 
         // Register simplified configuration manager
-        services.AddSingleton<IMicFxConfigurationManager, SimpleMicFxConfigurationManager>();
+        services.AddSingleton<IMicFxConfigurationManager, MicFxConfigurationManager>();
 
         // Validate configurations on startup if enabled
         if (options.ValidateOnStartup)

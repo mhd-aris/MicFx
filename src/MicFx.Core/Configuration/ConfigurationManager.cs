@@ -11,14 +11,14 @@ namespace MicFx.Core.Configuration;
 /// Simplified implementation untuk management konfigurasi module
 /// Removed complex monitoring and hot reload features for better maintainability
 /// </summary>
-public class SimpleMicFxConfigurationManager : IMicFxConfigurationManager
+public class MicFxConfigurationManager : IMicFxConfigurationManager
 {
     private readonly IConfiguration _configuration;
-    private readonly ILogger<SimpleMicFxConfigurationManager> _logger;
+    private readonly ILogger<MicFxConfigurationManager> _logger;
     private readonly ConcurrentDictionary<string, IModuleConfiguration> _configurations = new();
     private readonly ConcurrentDictionary<Type, IModuleConfiguration> _configurationsByType = new();
 
-    public SimpleMicFxConfigurationManager(IConfiguration configuration, ILogger<SimpleMicFxConfigurationManager> logger)
+    public MicFxConfigurationManager(IConfiguration configuration, ILogger<MicFxConfigurationManager> logger)
     {
         _configuration = configuration;
         _logger = logger;

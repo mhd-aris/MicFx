@@ -15,7 +15,7 @@ namespace MicFx.Core.Modularity
         public abstract string Author { get; }
 
         // Essential properties with sensible defaults
-        public virtual string[] Dependencies => Array.Empty<string>();
+        public virtual string[]? Dependencies => Array.Empty<string>();
         public virtual bool IsEnabled => true; // Enabled by default
         public virtual int Priority => 100; // Default priority
 
