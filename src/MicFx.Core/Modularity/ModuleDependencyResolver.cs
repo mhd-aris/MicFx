@@ -81,7 +81,7 @@ namespace MicFx.Core.Modularity
         }
 
         /// <summary>
-        /// Gets module startup order based on Priority (higher priority loads first)
+        /// Gets module startup order based on Priority (lower number = higher priority, loads first)
         /// </summary>
         /// <returns>Ordered list of module names for startup</returns>
         public IReadOnlyList<string> GetStartupOrder()
@@ -93,7 +93,7 @@ namespace MicFx.Core.Modularity
             }
 
             var orderedModules = _registeredModules.Values
-                .OrderByDescending(m => m.Priority)      // Higher priority first
+                .OrderBy(m => m.Priority)                // Lower number = higher priority
                 .ThenBy(m => m.Name, StringComparer.OrdinalIgnoreCase)  // Alphabetical for deterministic ordering
                 .Select(m => m.Name)
                 .ToList()

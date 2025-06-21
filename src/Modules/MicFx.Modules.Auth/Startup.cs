@@ -108,7 +108,10 @@ namespace MicFx.Modules.Auth
             services.AddScoped<IAuthService, AuthService>();
             services.AddHostedService<AuthDatabaseInitializer>();
             
-            // 7. Register Health Check
+            // 7. Register Module Seeder untuk data initialization
+            services.AddScoped<IModuleSeeder, AuthModuleSeeder>();
+            
+            // 8. Register Health Check
             services.AddHealthChecks()
                 .AddCheck<AuthHealthCheck>("auth_module", tags: new[] { "auth", "database", "identity" });
             

@@ -37,7 +37,7 @@ namespace MicFx.SharedKernel.Modularity
         bool IsEnabled { get; }
 
         /// <summary>
-        /// Module priority for startup ordering (higher loads first)
+        /// Module priority for startup ordering (lower number = higher priority, loads first)
         /// </summary>
         int Priority { get; }
     }

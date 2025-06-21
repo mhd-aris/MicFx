@@ -62,11 +62,11 @@ public class Manifest : ModuleManifestBase
     /// </summary>
     public override string MinimumFrameworkVersion => "1.0.0";
 
-    /// <summary>
-    /// Priority for module initialization (higher values load first)
-    /// HelloWorld as PoC loads with normal priority
-    /// </summary>
-    public override int Priority => 100;
+            /// <summary>
+        /// Priority for module initialization (lower number = higher priority, loads first)
+        /// HelloWorld as PoC loads with normal priority
+        /// </summary>
+        public override int Priority => 100;
 
     /// <summary>
     /// Whether this module is critical for system operation

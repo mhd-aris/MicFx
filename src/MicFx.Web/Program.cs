@@ -158,4 +158,10 @@ app.MapControllerRoute(
 
 app.MapControllers();
 
+// 🌱 Run module data seeders untuk development/demo data
+if (app.Environment.IsDevelopment() || app.Environment.IsStaging())
+{
+    await app.Services.RunModuleSeedersAsync();
+}
+
 app.Run();
