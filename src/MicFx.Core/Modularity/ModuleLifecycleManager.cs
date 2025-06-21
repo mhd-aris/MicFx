@@ -57,13 +57,13 @@ namespace MicFx.Core.Modularity
         {
             _logger.LogInformation("Starting module lifecycle management for {ModuleCount} modules", _moduleInstances.Count);
 
-            // Validate dependencies first
-            var validationResult = _dependencyResolver.ValidateDependencies();
-            if (!validationResult.IsValid)
-            {
-                var errorDetails = FormatValidationErrors(validationResult);
-                throw new ModuleException($"Module dependency validation failed: {errorDetails}", "LifecycleManager");
-            }
+                    // Validate dependencies first
+        var validationResult = _dependencyResolver.ValidateDependencies();
+        if (!validationResult.IsValid)
+        {
+            var errorDetails = string.Join(", ", validationResult.MissingDependencies);
+            throw new ModuleException($"Module dependency validation failed: {errorDetails}", "LifecycleManager");
+        }
 
             // Get startup order
             var startupOrder = _dependencyResolver.GetStartupOrder();
@@ -278,7 +278,7 @@ namespace MicFx.Core.Modularity
 
         private async Task EnsureDependenciesStartedAsync(string moduleName, CancellationToken cancellationToken)
         {
-            var dependencies = _dependencyResolver.GetAllDependencies(moduleName);
+            var dependencies = _dependencyResolver.GetDirectDependencies(moduleName);
 
             foreach (var dependency in dependencies)
             {
@@ -291,7 +291,7 @@ namespace MicFx.Core.Modularity
 
         private async Task StopDependentModulesAsync(string moduleName, CancellationToken cancellationToken)
         {
-            var dependents = _dependencyResolver.GetDependents(moduleName);
+            var dependents = _dependencyResolver.GetDirectDependents(moduleName);
 
             foreach (var dependent in dependents)
             {
@@ -309,22 +309,7 @@ namespace MicFx.Core.Modularity
             return Task.CompletedTask;
         }
 
-        private string FormatValidationErrors(ModuleDependencyValidationResult result)
-        {
-            var errors = new List<string>();
-
-            if (result.MissingDependencies.Any())
-            {
-                errors.Add($"Missing dependencies: {string.Join(", ", result.MissingDependencies.Select(md => $"{md.ModuleName} -> {md.DependencyName}"))}");
-            }
-
-            if (result.CircularDependencies.Any())
-            {
-                errors.Add($"Circular dependencies: {string.Join(", ", result.CircularDependencies.Select(cd => string.Join(" -> ", cd.Cycle)))}");
-            }
-
-            return string.Join("; ", errors);
-        }
+        // Removed FormatValidationErrors method - simplified validation error handling
     }
 
     /// <summary>

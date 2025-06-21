@@ -343,32 +343,7 @@ namespace MicFx.Core.Extensions
             });
         }
 
-        /// <summary>
-        /// Log validation errors using Serilog
-        /// </summary>
-        private static void LogValidationErrors(ModuleDependencyValidationResult validationResult)
-        {
-            Log.Error("❌ Module dependency validation failed:");
-
-            if (validationResult.MissingDependencies.Any())
-            {
-                Log.Error("Missing dependencies:");
-                foreach (var missing in validationResult.MissingDependencies)
-                {
-                    Log.Error("  - {ModuleName} requires {DependencyName}", missing.ModuleName, missing.DependencyName);
-                }
-            }
-
-            if (validationResult.CircularDependencies.Any())
-            {
-                Log.Error("Circular dependencies detected:");
-                foreach (var circular in validationResult.CircularDependencies)
-                {
-                    Log.Error("  - {Cycle}", string.Join(" -> ", circular.Cycle));
-                }
-            }
-        }
-
+       
 
         /// <summary>
         /// Result from module discovery with comprehensive error reporting
@@ -559,7 +534,8 @@ namespace MicFx.Core.Extensions
             var validationResult = _dependencyResolver.ValidateDependencies();
             if (!validationResult.IsValid)
             {
-                throw new InvalidOperationException("Module dependency validation failed. See logs for details.");
+                var errorDetails = string.Join(", ", validationResult.MissingDependencies);
+                throw new InvalidOperationException($"Module dependency validation failed: {errorDetails}");
             }
 
             // Configure services in dependency order

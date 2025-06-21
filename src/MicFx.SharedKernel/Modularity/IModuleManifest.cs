@@ -35,5 +35,10 @@ namespace MicFx.SharedKernel.Modularity
         /// Whether module is enabled (default: true)
         /// </summary>
         bool IsEnabled { get; }
+
+        /// <summary>
+        /// Module priority for startup ordering (higher loads first)
+        /// </summary>
+        int Priority { get; }
     }
 }

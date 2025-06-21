@@ -1,284 +1,195 @@
 using Microsoft.Extensions.Logging;
 using MicFx.SharedKernel.Modularity;
 using MicFx.SharedKernel.Common.Exceptions;
+using System.Linq;
 
 namespace MicFx.Core.Modularity
 {
     /// <summary>
-    /// Class for managing and resolving dependencies between modules
-    /// Simplified from over-engineered version for better maintainability
+    /// Simple module dependency resolver focused on current framework needs
+    /// Provides priority-based ordering and basic dependency validation
     /// </summary>
     public class ModuleDependencyResolver
     {
         private readonly ILogger<ModuleDependencyResolver> _logger;
-        private readonly Dictionary<string, IModuleManifest> _modules = new();
-        private readonly Dictionary<string, List<string>> _dependencyGraph = new();
-        private readonly Dictionary<string, List<string>> _reverseDependencyGraph = new();
+        private readonly Dictionary<string, IModuleManifest> _registeredModules = new();
 
         public ModuleDependencyResolver(ILogger<ModuleDependencyResolver> logger)
         {
-            _logger = logger;
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         /// <summary>
-        /// Registers a module into the dependency resolver
+        /// Registers a module for dependency resolution
         /// </summary>
+        /// <param name="manifest">Module manifest to register</param>
+        /// <exception cref="ArgumentNullException">When manifest is null</exception>
+        /// <exception cref="ModuleException">When module name is invalid</exception>
         public void RegisterModule(IModuleManifest manifest)
         {
-            if (string.IsNullOrEmpty(manifest.Name))
-            {
+            if (manifest == null)
+                throw new ArgumentNullException(nameof(manifest));
+
+            if (string.IsNullOrWhiteSpace(manifest.Name))
                 throw new ModuleException("Module name cannot be null or empty", "DependencyResolver");
-            }
 
-            if (_modules.ContainsKey(manifest.Name))
+            var moduleName = manifest.Name.Trim();
+
+            if (_registeredModules.ContainsKey(moduleName))
             {
-                _logger.LogWarning("Module {ModuleName} is already registered. Overwriting...", manifest.Name);
+                _logger.LogWarning("Module '{ModuleName}' is already registered. Replacing existing registration", moduleName);
             }
 
-            _modules[manifest.Name] = manifest;
-            _dependencyGraph[manifest.Name] = new List<string>(manifest.Dependencies);
+            _registeredModules[moduleName] = manifest;
 
-            // Build reverse dependency graph
-            _reverseDependencyGraph[manifest.Name] = new List<string>();
-            foreach (var dependency in manifest.Dependencies)
-            {
-                if (!_reverseDependencyGraph.ContainsKey(dependency))
-                {
-                    _reverseDependencyGraph[dependency] = new List<string>();
-                }
-                _reverseDependencyGraph[dependency].Add(manifest.Name);
-            }
-
-            _logger.LogInformation("Registered module {ModuleName} with {DependencyCount} dependencies",
-                manifest.Name, manifest.Dependencies.Length);
+            _logger.LogInformation("Registered module '{ModuleName}' with priority {Priority}", moduleName, manifest.Priority);
         }
 
         /// <summary>
-        /// Validates dependencies - simplified version focused on essential validations
+        /// Validates that all module dependencies are satisfied
         /// </summary>
-        public ModuleDependencyValidationResult ValidateDependencies()
+        /// <returns>Validation result with any missing dependencies</returns>
+        public DependencyValidationResult ValidateDependencies()
         {
-            var result = new ModuleDependencyValidationResult();
+            var missingDependencies = new List<string>();
 
-            // Check for missing dependencies
-            foreach (var module in _modules.Values)
+            foreach (var module in _registeredModules.Values)
             {
-                foreach (var dependency in module.Dependencies)
+                foreach (var dependency in module.Dependencies ?? Array.Empty<string>())
                 {
-                    if (!_modules.ContainsKey(dependency))
+                    if (string.IsNullOrWhiteSpace(dependency))
+                        continue;
+
+                    var dependencyName = dependency.Trim();
+                    if (!_registeredModules.ContainsKey(dependencyName))
                     {
-                        result.MissingDependencies.Add(new MissingDependency
-                        {
-                            ModuleName = module.Name,
-                            DependencyName = dependency
-                        });
+                        missingDependencies.Add($"Module '{module.Name}' requires '{dependencyName}' but it is not registered");
                     }
                 }
             }
 
-            // Check for circular dependencies
-            var circularDeps = DetectCircularDependencies();
-            result.CircularDependencies.AddRange(circularDeps);
+            var isValid = !missingDependencies.Any();
+            _logger.LogInformation("Dependency validation completed. Valid: {IsValid}, Missing: {MissingCount}", 
+                isValid, missingDependencies.Count);
 
-            result.IsValid = !result.MissingDependencies.Any() && !result.CircularDependencies.Any();
-
-            _logger.LogInformation("Dependency validation completed. Valid: {IsValid}, Missing: {MissingCount}, Circular: {CircularCount}",
-                result.IsValid, result.MissingDependencies.Count, result.CircularDependencies.Count);
-
-            return result;
-        }
-
-        /// <summary>
-        /// Calculates module startup order based on dependencies using topological sorting
-        /// Simplified without complex priority handling
-        /// </summary>
-        public List<string> GetStartupOrder()
-        {
-            var result = new List<string>();
-            var visited = new HashSet<string>();
-            var visiting = new HashSet<string>();
-
-            foreach (var moduleName in _modules.Keys)
+            if (!isValid)
             {
-                if (!visited.Contains(moduleName))
-                {
-                    TopologicalSort(moduleName, visited, visiting, result);
-                }
+                _logger.LogWarning("Missing dependencies: {MissingDependencies}", string.Join(", ", missingDependencies));
             }
 
-            _logger.LogInformation("Calculated startup order for {ModuleCount} modules: {StartupOrder}",
-                result.Count, string.Join(" -> ", result));
-
-            return result;
+            return new DependencyValidationResult(isValid, missingDependencies.AsReadOnly());
         }
 
         /// <summary>
-        /// Calculates module shutdown order (reverse of startup order)
+        /// Gets module startup order based on Priority (higher priority loads first)
         /// </summary>
-        public List<string> GetShutdownOrder()
+        /// <returns>Ordered list of module names for startup</returns>
+        public IReadOnlyList<string> GetStartupOrder()
         {
-            var startupOrder = GetStartupOrder();
+            if (!_registeredModules.Any())
+            {
+                _logger.LogInformation("No modules registered for startup ordering");
+                return Array.Empty<string>();
+            }
+
+            var orderedModules = _registeredModules.Values
+                .OrderByDescending(m => m.Priority)      // Higher priority first
+                .ThenBy(m => m.Name, StringComparer.OrdinalIgnoreCase)  // Alphabetical for deterministic ordering
+                .Select(m => m.Name)
+                .ToList()
+                .AsReadOnly();
+
+            _logger.LogInformation("Startup order for {ModuleCount} modules: {StartupOrder}",
+                orderedModules.Count, string.Join(" → ", orderedModules));
+
+            return orderedModules;
+        }
+
+        /// <summary>
+        /// Gets module shutdown order (reverse of startup order)
+        /// </summary>
+        /// <returns>Ordered list of module names for shutdown</returns>
+        public IReadOnlyList<string> GetShutdownOrder()
+        {
+            var startupOrder = GetStartupOrder().ToList();
             startupOrder.Reverse();
 
-            _logger.LogInformation("Calculated shutdown order for {ModuleCount} modules: {ShutdownOrder}",
-                startupOrder.Count, string.Join(" -> ", startupOrder));
+            var shutdownOrder = startupOrder.AsReadOnly();
+            
+            _logger.LogInformation("Shutdown order for {ModuleCount} modules: {ShutdownOrder}",
+                shutdownOrder.Count, string.Join(" → ", shutdownOrder));
 
-            return startupOrder;
+            return shutdownOrder;
         }
 
         /// <summary>
-        /// Gets all dependencies for a specific module (including transitive dependencies)
+        /// Gets direct dependencies for a specific module
         /// </summary>
-        public List<string> GetAllDependencies(string moduleName)
+        /// <param name="moduleName">Name of the module</param>
+        /// <returns>List of direct dependency names</returns>
+        public IReadOnlyList<string> GetDirectDependencies(string moduleName)
         {
-            var dependencies = new HashSet<string>();
-            var queue = new Queue<string>();
+            if (string.IsNullOrWhiteSpace(moduleName))
+                return Array.Empty<string>();
 
-            if (!_modules.ContainsKey(moduleName))
+            var trimmedName = moduleName.Trim();
+            if (!_registeredModules.TryGetValue(trimmedName, out var module))
             {
-                return new List<string>();
+                _logger.LogDebug("Module '{ModuleName}' not found when getting dependencies", trimmedName);
+                return Array.Empty<string>();
             }
 
-            queue.Enqueue(moduleName);
+            var dependencies = (module.Dependencies ?? Array.Empty<string>())
+                .Where(d => !string.IsNullOrWhiteSpace(d))
+                .Select(d => d.Trim())
+                .ToList()
+                .AsReadOnly();
 
-            while (queue.Count > 0)
-            {
-                var current = queue.Dequeue();
-
-                if (_dependencyGraph.ContainsKey(current))
-                {
-                    foreach (var dependency in _dependencyGraph[current])
-                    {
-                        if (!dependencies.Contains(dependency))
-                        {
-                            dependencies.Add(dependency);
-                            queue.Enqueue(dependency);
-                        }
-                    }
-                }
-            }
-
-            return dependencies.ToList();
+            return dependencies;
         }
 
         /// <summary>
-        /// Gets all modules that depend on a specific module
+        /// Gets modules that directly depend on the specified module
         /// </summary>
-        public List<string> GetDependents(string moduleName)
+        /// <param name="moduleName">Name of the module</param>
+        /// <returns>List of dependent module names</returns>
+        public IReadOnlyList<string> GetDirectDependents(string moduleName)
         {
-            if (!_reverseDependencyGraph.ContainsKey(moduleName))
-            {
-                return new List<string>();
-            }
+            if (string.IsNullOrWhiteSpace(moduleName))
+                return Array.Empty<string>();
 
-            return _reverseDependencyGraph[moduleName].ToList();
+            var trimmedName = moduleName.Trim();
+            var dependents = _registeredModules.Values
+                .Where(m => (m.Dependencies ?? Array.Empty<string>())
+                    .Any(d => string.Equals(d?.Trim(), trimmedName, StringComparison.OrdinalIgnoreCase)))
+                .Select(m => m.Name)
+                .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
+                .ToList()
+                .AsReadOnly();
+
+            return dependents;
         }
 
-        private void TopologicalSort(string moduleName, HashSet<string> visited, HashSet<string> visiting, List<string> result)
-        {
-            if (visiting.Contains(moduleName))
-            {
-                throw new ModuleException($"Circular dependency detected involving module: {moduleName}", "DependencyResolver");
-            }
+        /// <summary>
+        /// Gets total count of registered modules
+        /// </summary>
+        public int RegisteredModuleCount => _registeredModules.Count;
 
-            if (visited.Contains(moduleName))
-            {
-                return;
-            }
-
-            visiting.Add(moduleName);
-
-            if (_dependencyGraph.ContainsKey(moduleName))
-            {
-                foreach (var dependency in _dependencyGraph[moduleName])
-                {
-                    TopologicalSort(dependency, visited, visiting, result);
-                }
-            }
-
-            visiting.Remove(moduleName);
-            visited.Add(moduleName);
-            result.Add(moduleName);
-        }
-
-        private List<CircularDependency> DetectCircularDependencies()
-        {
-            var circularDeps = new List<CircularDependency>();
-            var visited = new HashSet<string>();
-            var recursionStack = new HashSet<string>();
-
-            foreach (var moduleName in _modules.Keys)
-            {
-                if (!visited.Contains(moduleName))
-                {
-                    var path = new List<string>();
-                    DetectCircularDependencyDFS(moduleName, visited, recursionStack, path, circularDeps);
-                }
-            }
-
-            return circularDeps;
-        }
-
-        private bool DetectCircularDependencyDFS(string moduleName, HashSet<string> visited, 
-            HashSet<string> recursionStack, List<string> path, List<CircularDependency> circularDeps)
-        {
-            visited.Add(moduleName);
-            recursionStack.Add(moduleName);
-            path.Add(moduleName);
-
-            if (_dependencyGraph.ContainsKey(moduleName))
-            {
-                foreach (var dependency in _dependencyGraph[moduleName])
-                {
-                    if (!visited.Contains(dependency))
-                    {
-                        if (DetectCircularDependencyDFS(dependency, visited, recursionStack, path, circularDeps))
-                        {
-                            return true;
-                        }
-                    }
-                    else if (recursionStack.Contains(dependency))
-                    {
-                        // Found circular dependency
-                        var cycle = new List<string>(path.SkipWhile(m => m != dependency));
-                        cycle.Add(dependency); // Complete the cycle
-
-                        circularDeps.Add(new CircularDependency { Cycle = cycle });
-                        return true;
-                    }
-                }
-            }
-
-            path.RemoveAt(path.Count - 1);
-            recursionStack.Remove(moduleName);
-            return false;
-        }
+        // GetModulePriority method removed - Priority is now directly available from interface
     }
 
     /// <summary>
-    /// Simplified dependency validation result - removed over-engineered features
+    /// Result of dependency validation with immutable properties
     /// </summary>
-    public class ModuleDependencyValidationResult
+    public class DependencyValidationResult
     {
-        public bool IsValid { get; set; }
-        public List<MissingDependency> MissingDependencies { get; set; } = new();
-        public List<CircularDependency> CircularDependencies { get; set; } = new();
-    }
+        public bool IsValid { get; }
+        public IReadOnlyList<string> MissingDependencies { get; }
 
-    /// <summary>
-    /// Simplified missing dependency class
-    /// </summary>
-    public class MissingDependency
-    {
-        public string ModuleName { get; set; } = string.Empty;
-        public string DependencyName { get; set; } = string.Empty;
-    }
-
-    /// <summary>
-    /// Circular dependency detection result
-    /// </summary>
-    public class CircularDependency
-    {
-        public List<string> Cycle { get; set; } = new();
+        public DependencyValidationResult(bool isValid, IReadOnlyList<string> missingDependencies)
+        {
+            IsValid = isValid;
+            MissingDependencies = missingDependencies ?? Array.Empty<string>();
+        }
     }
 }
