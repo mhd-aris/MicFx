@@ -438,7 +438,8 @@ namespace MicFx.Core.Extensions
     }
 
     /// <summary>
-    /// Health check implementation for module status monitoring
+    /// Simple health check implementation for module status monitoring
+    /// Simplified from over-engineered version for better maintainability
     /// </summary>
     public class ModuleHealthCheck : Microsoft.Extensions.Diagnostics.HealthChecks.IHealthCheck
     {
@@ -463,17 +464,18 @@ namespace MicFx.Core.Extensions
 
                 var moduleStates = _lifecycleManager.GetAllModuleStates();
                 var totalModules = moduleStates.Count;
-                var healthyModules = moduleStates.Values.Count(s => s.State == ModuleState.Loaded);
+                var loadedModules = moduleStates.Values.Count(s => s.State == ModuleState.Loaded);
                 var errorModules = moduleStates.Values.Count(s => s.State == ModuleState.Error);
 
                 var data = new Dictionary<string, object>
                 {
                     ["TotalModules"] = totalModules,
-                    ["HealthyModules"] = healthyModules,
+                    ["LoadedModules"] = loadedModules,
                     ["ErrorModules"] = errorModules,
-                    ["HealthPercentage"] = totalModules > 0 ? (healthyModules * 100.0 / totalModules) : 100.0
+                    ["CheckedAt"] = DateTime.UtcNow
                 };
 
+                // Simple health determination
                 if (errorModules > 0)
                 {
                     var errorModuleNames = moduleStates.Values
@@ -484,17 +486,17 @@ namespace MicFx.Core.Extensions
                     data["ErrorModuleNames"] = errorModuleNames;
 
                     return Task.FromResult(Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Unhealthy(
-                        $"{errorModules} modules in error state", data: data));
+                        $"{errorModules} modules in error state: {string.Join(", ", errorModuleNames)}", data: data));
                 }
 
-                if (healthyModules < totalModules)
+                if (loadedModules < totalModules)
                 {
                     return Task.FromResult(Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Degraded(
-                        $"{totalModules - healthyModules} modules not fully started", data: data));
+                        $"{totalModules - loadedModules} modules still loading", data: data));
                 }
 
                 return Task.FromResult(Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy(
-                    $"All {totalModules} modules are healthy", data: data));
+                    $"All {totalModules} modules loaded successfully", data: data));
             }
             catch (Exception ex)
             {

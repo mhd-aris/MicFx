@@ -243,57 +243,7 @@ namespace MicFx.Core.Modularity
             return _moduleStates.TryGetValue(moduleName, out var state) ? state : null;
         }
 
-        /// <summary>
-        /// Health check for a specific module
-        /// </summary>
-        public async Task<ModuleHealthDetails> CheckModuleHealthAsync(string moduleName, CancellationToken cancellationToken = default)
-        {
-            if (!_moduleInstances.ContainsKey(moduleName))
-            {
-                return new ModuleHealthDetails
-                {
-                    Status = ModuleHealthStatus.Unhealthy,
-                    Description = "Module not found"
-                };
-            }
 
-            var module = _moduleInstances[moduleName];
-
-            if (module is IModuleHealthCheck healthCheckModule)
-            {
-                var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-                try
-                {
-                    var details = await healthCheckModule.GetHealthDetailsAsync(cancellationToken);
-                    details.Duration = stopwatch.Elapsed;
-                    return details;
-                }
-                catch (Exception ex)
-                {
-                    return new ModuleHealthDetails
-                    {
-                        Status = ModuleHealthStatus.Unhealthy,
-                        Description = "Health check failed",
-                        Exception = ex,
-                        Duration = stopwatch.Elapsed
-                    };
-                }
-            }
-
-            // Default health check based on module state
-            var moduleState = _moduleStates[moduleName];
-            return new ModuleHealthDetails
-            {
-                Status = moduleState.State == ModuleState.Loaded ? ModuleHealthStatus.Healthy : ModuleHealthStatus.Unhealthy,
-                Description = $"Module state: {moduleState.State}",
-                Data = new Dictionary<string, object>
-                {
-                    { "State", moduleState.State.ToString() },
-                    { "LastStateChange", moduleState.LastStateChange },
-                    { "ErrorCount", moduleState.ErrorCount }
-                }
-            };
-        }
 
         private Task TransitionModuleStateAsync(string moduleName, ModuleState newState, CancellationToken cancellationToken)
         {

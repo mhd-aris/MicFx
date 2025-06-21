@@ -44,44 +44,7 @@ public interface IModuleLifecycle
     Task ShutdownAsync(CancellationToken cancellationToken = default);
 }
 
-/// <summary>
-/// Interface for module health check (simplified)
-/// </summary>
-public interface IModuleHealthCheck
-{
-    /// <summary>
-    /// Checks the health status of the module
-    /// </summary>
-    Task<ModuleHealthStatus> CheckHealthAsync(CancellationToken cancellationToken = default);
 
-    /// <summary>
-    /// Gets detailed information about the health status
-    /// </summary>
-    Task<ModuleHealthDetails> GetHealthDetailsAsync(CancellationToken cancellationToken = default);
-}
-
-/// <summary>
-/// Module health status
-/// </summary>
-public enum ModuleHealthStatus
-{
-    Healthy,
-    Degraded,
-    Unhealthy
-}
-
-/// <summary>
-/// Detailed module health information
-/// </summary>
-public class ModuleHealthDetails
-{
-    public ModuleHealthStatus Status { get; set; }
-    public string? Description { get; set; }
-    public Dictionary<string, object> Data { get; set; } = new();
-    public DateTime CheckedAt { get; set; } = DateTime.UtcNow;
-    public TimeSpan Duration { get; set; }
-    public Exception? Exception { get; set; }
-}
 
 /// <summary>
 /// Module state information with metadata
