@@ -6,6 +6,7 @@ namespace MicFx.Core.Modularity
 {
     /// <summary>
     /// Class for managing and resolving dependencies between modules
+    /// Simplified from over-engineered version for better maintainability
     /// </summary>
     public class ModuleDependencyResolver
     {
@@ -53,7 +54,7 @@ namespace MicFx.Core.Modularity
         }
 
         /// <summary>
-        /// Validates all dependencies and detects circular dependencies
+        /// Validates dependencies - simplified version focused on essential validations
         /// </summary>
         public ModuleDependencyValidationResult ValidateDependencies()
         {
@@ -69,8 +70,7 @@ namespace MicFx.Core.Modularity
                         result.MissingDependencies.Add(new MissingDependency
                         {
                             ModuleName = module.Name,
-                            DependencyName = dependency,
-                            IsCritical = module is IExtendedModuleManifest extendedManifest ? extendedManifest.IsCritical : false
+                            DependencyName = dependency
                         });
                     }
                 }
@@ -80,18 +80,7 @@ namespace MicFx.Core.Modularity
             var circularDeps = DetectCircularDependencies();
             result.CircularDependencies.AddRange(circularDeps);
 
-            // Check for version conflicts
-            var versionConflicts = DetectVersionConflicts();
-            result.VersionConflicts.AddRange(versionConflicts);
-
-            // Check for module conflicts
-            var moduleConflicts = DetectModuleConflicts();
-            result.ModuleConflicts.AddRange(moduleConflicts);
-
-            result.IsValid = !result.MissingDependencies.Any() &&
-                           !result.CircularDependencies.Any() &&
-                           !result.VersionConflicts.Any() &&
-                           !result.ModuleConflicts.Any();
+            result.IsValid = !result.MissingDependencies.Any() && !result.CircularDependencies.Any();
 
             _logger.LogInformation("Dependency validation completed. Valid: {IsValid}, Missing: {MissingCount}, Circular: {CircularCount}",
                 result.IsValid, result.MissingDependencies.Count, result.CircularDependencies.Count);
@@ -101,6 +90,7 @@ namespace MicFx.Core.Modularity
 
         /// <summary>
         /// Calculates module startup order based on dependencies using topological sorting
+        /// Simplified without complex priority handling
         /// </summary>
         public List<string> GetStartupOrder()
         {
@@ -116,22 +106,10 @@ namespace MicFx.Core.Modularity
                 }
             }
 
-            // Sort modules with same dependency level by priority
-            var orderedResult = result
-                .Select((name, index) => new { 
-                    Name = name, 
-                    Index = index, 
-                    Priority = _modules[name] is IExtendedModuleManifest extendedManifest ? extendedManifest.Priority : 100 
-                })
-                .OrderBy(x => x.Index)
-                .ThenBy(x => x.Priority)
-                .Select(x => x.Name)
-                .ToList();
-
             _logger.LogInformation("Calculated startup order for {ModuleCount} modules: {StartupOrder}",
-                orderedResult.Count, string.Join(" -> ", orderedResult));
+                result.Count, string.Join(" -> ", result));
 
-            return orderedResult;
+            return result;
         }
 
         /// <summary>
@@ -214,10 +192,7 @@ namespace MicFx.Core.Modularity
             {
                 foreach (var dependency in _dependencyGraph[moduleName])
                 {
-                    if (_modules.ContainsKey(dependency))
-                    {
-                        TopologicalSort(dependency, visited, visiting, result);
-                    }
+                    TopologicalSort(dependency, visited, visiting, result);
                 }
             }
 
@@ -244,7 +219,7 @@ namespace MicFx.Core.Modularity
             return circularDeps;
         }
 
-        private bool DetectCircularDependencyDFS(string moduleName, HashSet<string> visited,
+        private bool DetectCircularDependencyDFS(string moduleName, HashSet<string> visited, 
             HashSet<string> recursionStack, List<string> path, List<CircularDependency> circularDeps)
         {
             visited.Add(moduleName);
@@ -255,23 +230,20 @@ namespace MicFx.Core.Modularity
             {
                 foreach (var dependency in _dependencyGraph[moduleName])
                 {
-                    if (!_modules.ContainsKey(dependency)) continue;
-
                     if (!visited.Contains(dependency))
                     {
                         if (DetectCircularDependencyDFS(dependency, visited, recursionStack, path, circularDeps))
+                        {
                             return true;
+                        }
                     }
                     else if (recursionStack.Contains(dependency))
                     {
                         // Found circular dependency
-                        var cycleStart = path.IndexOf(dependency);
-                        var cycle = path.Skip(cycleStart).Concat(new[] { dependency }).ToList();
+                        var cycle = new List<string>(path.SkipWhile(m => m != dependency));
+                        cycle.Add(dependency); // Complete the cycle
 
-                        circularDeps.Add(new CircularDependency
-                        {
-                            Cycle = cycle
-                        });
+                        circularDeps.Add(new CircularDependency { Cycle = cycle });
                         return true;
                     }
                 }
@@ -281,90 +253,32 @@ namespace MicFx.Core.Modularity
             recursionStack.Remove(moduleName);
             return false;
         }
-
-        private List<VersionConflict> DetectVersionConflicts()
-        {
-            var conflicts = new List<VersionConflict>();
-
-            // Check framework version compatibility only for extended manifests
-            foreach (var module in _modules.Values)
-            {
-                if (module is IExtendedModuleManifest extendedManifest)
-                {
-                    // Assuming framework version is available from somewhere
-                    var frameworkVersion = "1.0.0"; // This should come from actual framework version
-
-                    if (!IsVersionCompatible(frameworkVersion, extendedManifest.MinimumFrameworkVersion, "99.0.0"))
-                    {
-                        conflicts.Add(new VersionConflict
-                        {
-                            ModuleName = module.Name,
-                            RequiredVersion = $"{extendedManifest.MinimumFrameworkVersion}+",
-                            ActualVersion = frameworkVersion,
-                            ConflictType = "Framework"
-                        });
-                    }
-                }
-            }
-
-            return conflicts;
-        }
-
-        private List<ModuleConflict> DetectModuleConflicts()
-        {
-            var conflicts = new List<ModuleConflict>();
-
-            // Module conflicts are no longer supported in simplified interface
-            // This method now returns empty list as conflicts are deprecated
-            _logger.LogDebug("Module conflict detection skipped - ConflictsWith property not available in simplified manifest");
-
-            return conflicts;
-        }
-
-        private bool IsVersionCompatible(string currentVersion, string minVersion, string maxVersion)
-        {
-            // Simplified version comparison - in real implementation, use proper version parsing
-            return string.Compare(currentVersion, minVersion, StringComparison.OrdinalIgnoreCase) >= 0 &&
-                   string.Compare(currentVersion, maxVersion, StringComparison.OrdinalIgnoreCase) <= 0;
-        }
     }
 
     /// <summary>
-    /// Result of dependency validation
+    /// Simplified dependency validation result - removed over-engineered features
     /// </summary>
     public class ModuleDependencyValidationResult
     {
         public bool IsValid { get; set; }
         public List<MissingDependency> MissingDependencies { get; set; } = new();
         public List<CircularDependency> CircularDependencies { get; set; } = new();
-        public List<VersionConflict> VersionConflicts { get; set; } = new();
-        public List<ModuleConflict> ModuleConflicts { get; set; } = new();
     }
 
+    /// <summary>
+    /// Simplified missing dependency class
+    /// </summary>
     public class MissingDependency
     {
         public string ModuleName { get; set; } = string.Empty;
         public string DependencyName { get; set; } = string.Empty;
-        public bool IsCritical { get; set; }
     }
 
+    /// <summary>
+    /// Circular dependency detection result
+    /// </summary>
     public class CircularDependency
     {
         public List<string> Cycle { get; set; } = new();
-    }
-
-    public class VersionConflict
-    {
-        public string ModuleName { get; set; } = string.Empty;
-        public string RequiredVersion { get; set; } = string.Empty;
-        public string ActualVersion { get; set; } = string.Empty;
-        public string ConflictType { get; set; } = string.Empty;
-    }
-
-    public class ModuleConflict
-    {
-        public string ModuleName { get; set; } = string.Empty;
-        public string ConflictingModuleName { get; set; } = string.Empty;
-        public string Reason { get; set; } = string.Empty;
     }
 }

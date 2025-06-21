@@ -106,7 +106,6 @@ public class HelloWorldController : ControllerBase
             manifest.Version,
             manifest.Description,
             manifest.Author,
-            Tags = manifest is IExtendedModuleManifest extendedManifest ? extendedManifest.Tags : new string[0],
             manifest.Dependencies
         };
 
@@ -150,8 +149,7 @@ public class HelloWorldController : ControllerBase
                 manifest.Name,
                 manifest.Version,
                 manifest.Description,
-                manifest.Author,
-                Tags = manifest is IExtendedModuleManifest extendedManifest2 ? extendedManifest2.Tags : new string[0]
+                manifest.Author
             },
             Statistics = statistics,
             Health = health,
