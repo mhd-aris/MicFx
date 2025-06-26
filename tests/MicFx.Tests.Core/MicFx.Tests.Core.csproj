@@ -39,6 +39,10 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="Microsoft.Extensions.Configuration" />
     <PackageReference Include="Microsoft.Extensions.Logging" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
+    
+    <!-- Entity Framework untuk testing -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
   </ItemGroup>
 
   <ItemGroup>
@@ -47,6 +51,9 @@
     <ProjectReference Include="../../src/MicFx.SharedKernel/MicFx.SharedKernel.csproj" />
     <ProjectReference Include="../../src/MicFx.Abstractions/MicFx.Abstractions.csproj" />
     <ProjectReference Include="../../src/MicFx.Infrastructure/MicFx.Infrastructure.csproj" />
+    
+    <!-- Reference ke Module Projects untuk testing -->
+    <ProjectReference Include="../../src/Modules/MicFx.Modules.Auth/MicFx.Modules.Auth.csproj" />
   </ItemGroup>
 
 </Project>

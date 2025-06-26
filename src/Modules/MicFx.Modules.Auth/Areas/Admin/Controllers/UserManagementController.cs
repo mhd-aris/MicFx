@@ -6,16 +6,17 @@ using Microsoft.Extensions.Logging;
 using MicFx.Modules.Auth.Domain.Entities;
 using MicFx.Modules.Auth.Services;
 using MicFx.Modules.Auth.Domain.DTOs;
+using MicFx.Modules.Auth.Authorization;
 
 namespace MicFx.Modules.Auth.Areas.Admin.Controllers
 {
     /// <summary>
-    /// Admin controller for managing users
-    /// Only accessible by Admin and SuperAdmin
+    /// Enhanced admin controller for managing users with permission-based authorization
+    /// Uses permission system with wildcard support
     /// </summary>
     [Area("Admin")]
     [Route("admin/auth/users")]
-    [Authorize(Policy = AuthorizationPolicyService.UserManagementPolicy)]
+    [Permission("users.view")] // Auto-detected as "auth.users.view"
     public class UserManagementController : Controller
     {
         private readonly UserManager<User> _userManager;
@@ -120,6 +121,7 @@ namespace MicFx.Modules.Auth.Areas.Admin.Controllers
 
         // GET: /admin/auth/users/edit/{id}
         [HttpGet("edit/{id}")]
+        [Permission("users.edit")] // Requires specific edit permission
         public async Task<IActionResult> Edit(string id)
         {
             var user = await _userManager.FindByIdAsync(id);
@@ -157,6 +159,7 @@ namespace MicFx.Modules.Auth.Areas.Admin.Controllers
         // POST: /admin/auth/users/edit/{id}
         [HttpPost("edit/{id}")]
         [ValidateAntiForgeryToken]
+        [Permission("users.edit")] // Requires edit permission for POST
         public async Task<IActionResult> Edit(string id, EditUserViewModel model)
         {
             if (id != model.Id)
@@ -226,6 +229,7 @@ namespace MicFx.Modules.Auth.Areas.Admin.Controllers
         // POST: /admin/auth/users/toggle-status/{id}
         [HttpPost("toggle-status/{id}")]
         [ValidateAntiForgeryToken]
+        [AnyPermission("users.activate", "users.edit")] // Requires either activate or edit permission
         public async Task<IActionResult> ToggleStatus(string id)
         {
             var user = await _userManager.FindByIdAsync(id);

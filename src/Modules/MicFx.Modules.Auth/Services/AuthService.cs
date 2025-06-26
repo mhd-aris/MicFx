@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System.Security.Claims;
 using MicFx.Modules.Auth.Domain.DTOs;
 using MicFx.Modules.Auth.Domain.Entities;
 using MicFx.Modules.Auth.Domain.Configuration;
@@ -9,14 +10,15 @@ using MicFx.Modules.Auth.Domain.Exceptions;
 namespace MicFx.Modules.Auth.Services
 {
     /// <summary>
-    /// Simple implementation of AuthService
-    /// Using ASP.NET Core Identity for best practices
+    /// Enhanced AuthService with permission claims loading
+    /// Using ASP.NET Core Identity with custom permission system integration
     /// </summary>
     public class AuthService : IAuthService
     {
         private readonly UserManager<User> _userManager;
         private readonly RoleManager<Role> _roleManager;
         private readonly SignInManager<User> _signInManager;
+        private readonly IPermissionService _permissionService;
         private readonly ILogger<AuthService> _logger;
         private readonly AuthConfig _config;
 
@@ -24,12 +26,14 @@ namespace MicFx.Modules.Auth.Services
             UserManager<User> userManager,
             RoleManager<Role> roleManager,
             SignInManager<User> signInManager,
+            IPermissionService permissionService,
             ILogger<AuthService> logger,
             AuthConfig config)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _signInManager = signInManager;
+            _permissionService = permissionService;
             _logger = logger;
             _config = config;
         }
@@ -61,8 +65,8 @@ namespace MicFx.Modules.Auth.Services
                     user.LastLoginAt = DateTime.UtcNow;
                     await _userManager.UpdateAsync(user);
 
-                    // Ensure user has proper role claims
-                    await EnsureUserRoleClaimsAsync(user);
+                    // Load user claims with permissions for enhanced authorization
+                    await LoadUserClaimsAsync(user);
 
                     var userInfo = await CreateUserInfoAsync(user);
                     
@@ -447,42 +451,138 @@ namespace MicFx.Modules.Auth.Services
         }
 
         /// <summary>
-        /// Ensure user has proper role claims for authorization
+        /// Load user claims including roles and permissions for enhanced authorization
+        /// Integrates with permission system for optimal performance
         /// </summary>
-        private async Task EnsureUserRoleClaimsAsync(User user)
+        private async Task LoadUserClaimsAsync(User user)
         {
             try
             {
                 var roles = await _userManager.GetRolesAsync(user);
                 var existingClaims = await _userManager.GetClaimsAsync(user);
                 
-                // Remove old role claims
-                var roleClaims = existingClaims.Where(c => c.Type == "role" || c.Type == System.Security.Claims.ClaimTypes.Role).ToList();
-                if (roleClaims.Any())
+                // Remove old auth-related claims
+                var authClaims = existingClaims.Where(c => 
+                    c.Type == "role" || 
+                    c.Type == ClaimTypes.Role || 
+                    c.Type == "permission" ||
+                    c.Type == "user_id").ToList();
+                
+                if (authClaims.Any())
                 {
-                    await _userManager.RemoveClaimsAsync(user, roleClaims);
+                    await _userManager.RemoveClaimsAsync(user, authClaims);
                 }
 
-                // Add current role claims
-                var newClaims = new List<System.Security.Claims.Claim>();
+                // Build new claims collection
+                var newClaims = new List<Claim>();
+                
+                // Add user ID claim for permission service
+                newClaims.Add(new Claim("user_id", user.Id));
+                
+                // Add role claims
                 foreach (var role in roles)
                 {
-                    newClaims.Add(new System.Security.Claims.Claim("role", role));
-                    newClaims.Add(new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Role, role));
+                    newClaims.Add(new Claim("role", role));
+                    newClaims.Add(new Claim(ClaimTypes.Role, role));
                 }
 
+                // Load user permissions and add as claims (with size optimization)
+                var permissions = await _permissionService.GetUserPermissionsAsync(user.Id);
+                var optimizedPermissions = OptimizePermissionsForClaims(permissions);
+                
+                foreach (var permission in optimizedPermissions)
+                {
+                    newClaims.Add(new Claim("permission", permission));
+                }
+
+                // Apply the claims
                 if (newClaims.Any())
                 {
                     await _userManager.AddClaimsAsync(user, newClaims);
                 }
                 
-                _logger.LogDebug("🔄 Updated role claims for user {UserId} with roles {Roles}", 
-                    user.Id, string.Join(", ", roles));
+                // Clear permission cache to ensure fresh data on next request
+                await _permissionService.ClearUserCacheAsync(user.Id);
+                
+                _logger.LogInformation("🔄 Loaded user claims for user {UserId}: {RoleCount} roles, {PermissionCount} permissions", 
+                    user.Id, roles.Count, optimizedPermissions.Count);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "💥 Error updating role claims for user {UserId}", user.Id);
+                _logger.LogError(ex, "💥 Error loading user claims for user {UserId}", user.Id);
+                // Fallback: continue without claims rather than failing login
             }
+        }
+
+        /// <summary>
+        /// Optimize permissions for cookie storage by applying compression
+        /// Converts specific permissions to wildcards when beneficial
+        /// </summary>
+        private List<string> OptimizePermissionsForClaims(List<string> permissions)
+        {
+            if (permissions.Count <= 20)
+            {
+                // Small permission set - no optimization needed
+                return permissions;
+            }
+
+            var optimized = new HashSet<string>();
+            var grouped = permissions.GroupBy(p => GetEntityPrefix(p)).ToList();
+
+            foreach (var group in grouped)
+            {
+                var entityPermissions = group.ToList();
+                
+                // If user has many permissions for same entity, use wildcard
+                if (entityPermissions.Count >= 4)
+                {
+                    optimized.Add($"{group.Key}.*");
+                    _logger.LogDebug("📦 Compressed {Count} permissions to wildcard: {Wildcard}", 
+                        entityPermissions.Count, $"{group.Key}.*");
+                }
+                else
+                {
+                    // Keep individual permissions
+                    foreach (var permission in entityPermissions)
+                    {
+                        optimized.Add(permission);
+                    }
+                }
+            }
+
+            // Check for global admin pattern
+            if (optimized.Count(p => p.EndsWith("*")) >= 5)
+            {
+                // User has wildcards for many entities - might be admin
+                _logger.LogDebug("🌟 User appears to be admin with {WildcardCount} wildcards", 
+                    optimized.Count(p => p.EndsWith("*")));
+                
+                // Consider adding global wildcard if it would save space
+                if (optimized.Count > 10)
+                {
+                    optimized.Clear();
+                    optimized.Add("*");
+                    _logger.LogDebug("🌟 Applied global wildcard for super admin permissions");
+                }
+            }
+
+            return optimized.ToList();
+        }
+
+        /// <summary>
+        /// Extract entity prefix from permission name for grouping
+        /// </summary>
+        private string GetEntityPrefix(string permission)
+        {
+            var parts = permission.Split('.');
+            if (parts.Length >= 2)
+            {
+                // Return module.entity (e.g., "auth.users" from "auth.users.view")
+                return string.Join(".", parts.Take(2));
+            }
+            
+            // Return first part as fallback
+            return parts[0];
         }
     }
 }

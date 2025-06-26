@@ -9,6 +9,7 @@ using MicFx.Modules.Auth.Data;
 using MicFx.Modules.Auth.Domain.Entities;
 using MicFx.Modules.Auth.Domain.Configuration;
 using MicFx.Modules.Auth.Services;
+using MicFx.Modules.Auth.Extensions;
 
 namespace MicFx.Modules.Auth
 {
@@ -101,8 +102,8 @@ namespace MicFx.Modules.Auth
                 };
             });
 
-            // 5. Configure Authorization Policies
-            services.ConfigureAuthorizationPolicies(_config);
+            // 5. Add MicFx Permission-based Authorization System
+            services.AddMicFxPermissions();
 
             // 6. Register Services
             services.AddScoped<IAuthService, AuthService>();
