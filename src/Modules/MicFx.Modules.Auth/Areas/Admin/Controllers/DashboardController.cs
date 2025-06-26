@@ -16,7 +16,7 @@ namespace MicFx.Modules.Auth.Areas.Admin.Controllers
     /// </summary>
     [Area("Admin")]
     [Route("admin/auth")]
-    [Authorize(Policy = AuthorizationPolicyService.AdminAreaPolicy)]
+    [Authorize(Policy = "AdminAreaAccess")]
     public class DashboardController : Controller
     {
         private readonly UserManager<User> _userManager;
@@ -40,53 +40,50 @@ namespace MicFx.Modules.Auth.Areas.Admin.Controllers
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            ViewData["Title"] = "Auth Management Dashboard";
+            ViewData["Title"] = "Auth Dashboard";
 
             // Get statistics
             var totalUsers = await _userManager.Users.CountAsync();
             var activeUsers = await _userManager.Users.CountAsync(u => u.IsActive);
             var totalRoles = await _roleManager.Roles.CountAsync();
-            var totalPermissions = await _context.Permissions.CountAsync(p => p.IsActive);
+            var totalPermissions = await _context.Permissions.CountAsync();
 
-            // Get recent users (last 10)
+            // Get recent users
             var recentUsers = await _userManager.Users
                 .OrderByDescending(u => u.CreatedAt)
-                .Take(10)
+                .Take(5)
+                .Select(u => new UserViewModel
+                {
+                    Id = u.Id,
+                    Email = u.Email ?? "",
+                    FirstName = u.FirstName ?? "",
+                    LastName = u.LastName ?? "",
+                    FullName = $"{u.FirstName ?? ""} {u.LastName ?? ""}".Trim(),
+                    IsActive = u.IsActive,
+                    CreatedAt = u.CreatedAt
+                })
                 .ToListAsync();
 
-            var recentUserViewModels = new List<UserViewModel>();
-            foreach (var user in recentUsers)
-            {
-                var roles = await _userManager.GetRolesAsync(user);
-                recentUserViewModels.Add(new UserViewModel
+            // Get top roles by user count - menggunakan query yang bisa di-translate
+            var rolesWithUserCount = await _context.Roles
+                .Select(r => new
                 {
-                    Id = user.Id,
-                    Email = user.Email ?? "",
-                    FirstName = user.FirstName ?? "",
-                    LastName = user.LastName ?? "",
-                    FullName = $"{user.FirstName ?? ""} {user.LastName ?? ""}".Trim(),
-                    IsActive = user.IsActive,
-                    CreatedAt = user.CreatedAt,
-                    Roles = roles.ToList()
-                });
-            }
+                    Role = r,
+                    UserCount = _context.UserRoles.Count(ur => ur.RoleId == r.Id)
+                })
+                .OrderByDescending(x => x.UserCount)
+                .Take(5)
+                .ToListAsync();
 
-            // Get top roles by user count
-            var topRoles = new List<RoleViewModel>();
-            var topRolesList = await _roleManager.Roles.OrderBy(r => r.Priority).Take(5).ToListAsync();
-            foreach (var role in topRolesList)
+            var topRoles = rolesWithUserCount.Select(x => new RoleViewModel
             {
-                var userCount = await _userManager.GetUsersInRoleAsync(role.Name ?? "");
-                topRoles.Add(new RoleViewModel
-                {
-                    Id = role.Id,
-                    Name = role.Name ?? "",
-                    Description = role.Description ?? "",
-                    IsSystemRole = role.IsSystemRole,
-                    Priority = role.Priority,
-                    UserCount = userCount.Count
-                });
-            }
+                Id = x.Role.Id,
+                Name = x.Role.Name ?? "",
+                Description = x.Role.Description ?? "",
+                UserCount = x.UserCount,
+                IsSystemRole = x.Role.IsSystemRole,
+                Priority = x.Role.Priority
+            }).ToList();
 
             var viewModel = new AdminDashboardViewModel
             {
@@ -94,12 +91,11 @@ namespace MicFx.Modules.Auth.Areas.Admin.Controllers
                 ActiveUsers = activeUsers,
                 TotalRoles = totalRoles,
                 TotalPermissions = totalPermissions,
-                RecentUsers = recentUserViewModels,
+                RecentUsers = recentUsers,
                 TopRoles = topRoles
             };
 
-            // Redirect to role management since we don't have a specific dashboard view
-            return RedirectToAction("Index", "RoleManagement");
+            return View("AuthDashboard", viewModel);
         }
 
         // GET: /admin/auth/quick-stats

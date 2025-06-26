@@ -14,11 +14,21 @@ namespace MicFx.Modules.Auth.Areas.Admin
             {
                 new AdminNavItem
                 {
+                    Title = "Auth Dashboard",
+                    Url = "/admin/auth",
+                    Icon = "dashboard",
+                    Order = 5,
+                    Category = "Authentication",
+                    RequiredRoles = new[] { "Admin", "SuperAdmin" },
+                    IsActive = true
+                },
+                new AdminNavItem
+                {
                     Title = "User Management",
                     Url = "/admin/auth/users",
                     Icon = "users",
                     Order = 10,
-                    Category = "Users",
+                    Category = "Authentication",
                     RequiredRoles = new[] { "Admin", "SuperAdmin" },
                     IsActive = true
                 },
@@ -26,19 +36,19 @@ namespace MicFx.Modules.Auth.Areas.Admin
                 {
                     Title = "Role Management",
                     Url = "/admin/auth/roles",
-                    Icon = "shield",
+                    Icon = "roles",
                     Order = 20,
-                    Category = "Users",
+                    Category = "Authentication",
                     RequiredRoles = new[] { "Admin", "SuperAdmin" },
                     IsActive = true
                 },
                 new AdminNavItem
                 {
-                    Title = "Auth Dashboard",
-                    Url = "/admin/auth",
-                    Icon = "dashboard",
-                    Order = 5,
-                    Category = "Users",
+                    Title = "Permission Management",
+                    Url = "/admin/auth/permissions",
+                    Icon = "permission",
+                    Order = 25,
+                    Category = "Authentication",
                     RequiredRoles = new[] { "Admin", "SuperAdmin" },
                     IsActive = true
                 },
@@ -46,9 +56,9 @@ namespace MicFx.Modules.Auth.Areas.Admin
                 {
                     Title = "Security Settings",
                     Url = "/admin/auth/settings",
-                    Icon = "settings",
+                    Icon = "security",
                     Order = 30,
-                    Category = "Settings",
+                    Category = "Authentication",
                     RequiredRoles = new[] { "SuperAdmin" },
                     IsActive = true
                 }

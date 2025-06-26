@@ -68,8 +68,6 @@ namespace MicFx.Modules.Auth.Areas.Admin.Controllers
                     FirstName = user.FirstName ?? "",
                     LastName = user.LastName ?? "",
                     FullName = $"{user.FirstName ?? ""} {user.LastName ?? ""}".Trim(),
-                    Department = user.Department ?? "",
-                    JobTitle = user.JobTitle ?? "",
                     IsActive = user.IsActive,
                     CreatedAt = user.CreatedAt,
                     LastLoginAt = user.LastLoginAt,
@@ -84,6 +82,91 @@ namespace MicFx.Modules.Auth.Areas.Admin.Controllers
             ViewBag.Search = search;
 
             return View(userViewModels);
+        }
+
+        // GET: /admin/auth/users/create
+        [HttpGet("create")]
+        [Permission("users.create")] // Requires create permission
+        public async Task<IActionResult> Create()
+        {
+            var allRoles = await _roleManager.Roles.ToListAsync();
+
+            var viewModel = new CreateUserViewModel
+            {
+                AvailableRoles = allRoles.Select(r => new RoleViewModel
+                {
+                    Id = r.Id,
+                    Name = r.Name ?? "",
+                    Description = r.Description ?? "",
+                    IsSelected = false
+                }).ToList()
+            };
+
+            ViewData["Title"] = "Create New User";
+            return View(viewModel);
+        }
+
+        // POST: /admin/auth/users/create
+        [HttpPost("create")]
+        [ValidateAntiForgeryToken]
+        [Permission("users.create")] // Requires create permission
+        public async Task<IActionResult> Create(CreateUserViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                // Reload available roles
+                var allRoles = await _roleManager.Roles.ToListAsync();
+                model.AvailableRoles = allRoles.Select(r => new RoleViewModel
+                {
+                    Id = r.Id,
+                    Name = r.Name ?? "",
+                    Description = r.Description ?? "",
+                    IsSelected = model.SelectedRoles.Contains(r.Name ?? "")
+                }).ToList();
+
+                return View(model);
+            }
+
+            var user = new User
+            {
+                UserName = model.Email,
+                Email = model.Email,
+                FirstName = model.FirstName,
+                LastName = model.LastName,
+                IsActive = model.IsActive,
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = User.Identity?.Name ?? "System"
+            };
+
+            var result = await _userManager.CreateAsync(user, model.Password);
+            if (result.Succeeded)
+            {
+                // Add selected roles
+                if (model.SelectedRoles.Any())
+                {
+                    await _userManager.AddToRolesAsync(user, model.SelectedRoles);
+                }
+
+                _logger.LogInformation($"✅ Created new user {user.Email} with {model.SelectedRoles.Count} roles");
+                return RedirectToAction(nameof(Index));
+            }
+
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+
+            // Reload available roles on error
+            var allRolesOnError = await _roleManager.Roles.ToListAsync();
+            model.AvailableRoles = allRolesOnError.Select(r => new RoleViewModel
+            {
+                Id = r.Id,
+                Name = r.Name ?? "",
+                Description = r.Description ?? "",
+                IsSelected = model.SelectedRoles.Contains(r.Name ?? "")
+            }).ToList();
+
+            return View(model);
         }
 
         // GET: /admin/auth/users/details/{id}
@@ -105,8 +188,6 @@ namespace MicFx.Modules.Auth.Areas.Admin.Controllers
                 Email = user.Email ?? "",
                 FirstName = user.FirstName ?? "",
                 LastName = user.LastName ?? "",
-                Department = user.Department ?? "",
-                JobTitle = user.JobTitle ?? "",
                 IsActive = user.IsActive,
                 CreatedAt = user.CreatedAt,
                 UpdatedAt = user.UpdatedAt,
@@ -139,8 +220,6 @@ namespace MicFx.Modules.Auth.Areas.Admin.Controllers
                 Email = user.Email ?? "",
                 FirstName = user.FirstName ?? "",
                 LastName = user.LastName ?? "",
-                Department = user.Department ?? "",
-                JobTitle = user.JobTitle ?? "",
                 IsActive = user.IsActive,
                 SelectedRoles = userRoles.ToList(),
                 AvailableRoles = allRoles.Select(r => new RoleViewModel
@@ -191,8 +270,6 @@ namespace MicFx.Modules.Auth.Areas.Admin.Controllers
             // Update user properties
             user.FirstName = model.FirstName;
             user.LastName = model.LastName;
-            user.Department = model.Department;
-            user.JobTitle = model.JobTitle;
             user.IsActive = model.IsActive;
             user.UpdatedAt = DateTime.UtcNow;
             user.UpdatedBy = User.Identity?.Name ?? "System";

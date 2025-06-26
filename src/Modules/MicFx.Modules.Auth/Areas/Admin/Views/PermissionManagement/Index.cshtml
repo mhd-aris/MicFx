@@ -1,0 +1,150 @@
+@model List<MicFx.Modules.Auth.Domain.DTOs.PermissionViewModel>
+
+@{
+    ViewData["Title"] = "Permission Management";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+
+    var groupedPermissions = Model
+        .GroupBy(p => p.Module)
+        .OrderBy(g => g.Key)
+        .ToList();
+}
+<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
+<div x-data="{
+    expandedModules: {},
+    toggle(module) {
+        this.expandedModules[module] = !this.expandedModules[module];
+    },
+    expandAll() {
+        for (const module of Object.keys(this.expandedModules)) this.expandedModules[module] = true;
+    },
+    collapseAll() {
+        for (const module of Object.keys(this.expandedModules)) this.expandedModules[module] = false;
+    },
+    init() {
+        @foreach (var group in groupedPermissions)
+        {
+            @:this.expandedModules['@group.Key'] = true;
+        }
+    }
+}" class="max-w-7xl mx-auto p-6 space-y-6">
+
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Permission Management</h1>
+            <p class="text-gray-600 mt-2">Manage system permissions and access control</p>
+        </div>
+        <div class="flex gap-3">
+            <button @@click="expandAll"
+                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
+                Expand All
+            </button>
+            <button @@click="collapseAll"
+                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
+                Collapse All
+            </button>
+        </div>
+    </div>
+
+    <!-- Accordion per Module -->
+    @foreach (var group in groupedPermissions)
+    {
+        <div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+            <!-- Accordion Header -->
+            <button @@click="toggle('@group.Key')" 
+                    class="w-full px-6 py-4 text-left flex items-center justify-between bg-gray-50 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 transition-colors">
+                <h2 class="text-lg font-semibold text-gray-900">@group.Key</h2>
+                <svg class="w-5 h-5 text-gray-500 transition-transform duration-200"
+                     :class="expandedModules['@group.Key'] ? 'rotate-180' : ''"
+                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </button>
+
+            <!-- Accordion Content -->
+            <div x-show="expandedModules['@group.Key']" 
+                 x-collapse
+                 class="border-t border-gray-200">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Permission Name
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Description
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Roles
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Created
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            @foreach (var permission in group.OrderBy(p => p.Name))
+                            {
+                                <tr class="hover:bg-gray-50 transition-colors">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="font-medium text-gray-900">@permission.Name</div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="text-sm text-gray-600 max-w-xs">
+                                            @(string.IsNullOrEmpty(permission.Description) ? 
+                                                Html.Raw("<span class=\"text-gray-400 italic\">No description</span>") : 
+                                                permission.Description)
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        @if (permission.Roles.Any())
+                                        {
+                                            <div class="flex flex-wrap gap-1">
+                                                @foreach (var role in permission.Roles.Take(3))
+                                                {
+                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                        @role
+                                                    </span>
+                                                }
+                                                @if (permission.Roles.Count > 3)
+                                                {
+                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                                                        +@(permission.Roles.Count - 3) more
+                                                    </span>
+                                                }
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-sm text-gray-400 italic">No roles assigned</span>
+                                        }
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        @permission.CreatedAt.ToString("MMM dd, yyyy")
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Empty State -->
+    @if (!Model.Any())
+    {
+        <div class="bg-white border border-gray-200 rounded-lg p-12 text-center">
+            <div class="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                </svg>
+            </div>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No permissions found</h3>
+            <p class="text-gray-600">Permissions are automatically created by modules when they are loaded.</p>
+        </div>
+    }
+</div>

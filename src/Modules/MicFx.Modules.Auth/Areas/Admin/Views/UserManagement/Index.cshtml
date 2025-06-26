@@ -3,359 +3,113 @@
 @{
     ViewData["Title"] = "User Management";
     Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
-    var currentPage = ViewBag.CurrentPage as int? ?? 1;
-    var totalPages = ViewBag.TotalPages as int? ?? 1;
-    var totalUsers = ViewBag.TotalUsers as int? ?? 0;
-    var search = ViewBag.Search as string ?? "";
 }
 
 <div class="space-y-6">
     <!-- Header -->
     <div class="flex justify-between items-center">
         <div>
-            <h1 class="text-3xl font-bold text-gray-900">User Management</h1>
-            <p class="mt-2 text-gray-600">Manage system users and their roles</p>
+            <h2 class="text-2xl font-bold text-gray-900">User Management</h2>
+            <p class="text-gray-600 mt-1">Manage user accounts and permissions</p>
         </div>
-    </div>
-
-    <!-- Stats Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div class="flex items-center">
-                <div class="p-3 bg-blue-100 rounded-lg">
-                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
-                    </svg>
-                </div>
-                <div class="ml-4">
-                    <p class="text-sm font-medium text-gray-600">Total Users</p>
-                    <p class="text-2xl font-bold text-gray-900">@totalUsers</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div class="flex items-center">
-                <div class="p-3 bg-green-100 rounded-lg">
-                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
-                <div class="ml-4">
-                    <p class="text-sm font-medium text-gray-600">Active Users</p>
-                    <p class="text-2xl font-bold text-gray-900">@Model.Count(u => u.IsActive)</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div class="flex items-center">
-                <div class="p-3 bg-orange-100 rounded-lg">
-                    <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728"></path>
-                    </svg>
-                </div>
-                <div class="ml-4">
-                    <p class="text-sm font-medium text-gray-600">Inactive Users</p>
-                    <p class="text-2xl font-bold text-gray-900">@Model.Count(u => !u.IsActive)</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div class="flex items-center">
-                <div class="p-3 bg-purple-100 rounded-lg">
-                    <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-                    </svg>
-                </div>
-                <div class="ml-4">
-                    <p class="text-sm font-medium text-gray-600">With Roles</p>
-                    <p class="text-2xl font-bold text-gray-900">@Model.Count(u => u.Roles.Any())</p>
-                </div>
-            </div>
-        </div>
+        <a href="/admin/auth/users/create" class="micfx-button-primary">
+            Add New User
+        </a>
     </div>
 
     <!-- Search and Filters -->
-    <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
-        <form method="get" class="flex items-center space-x-4">
-            <div class="flex-1">
-                <label for="search" class="sr-only">Search users</label>
-                <div class="relative">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                        </svg>
-                    </div>
-                    <input type="text" name="search" id="search" value="@search"
-                           class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-micfx-500 focus:border-micfx-500 sm:text-sm"
-                           placeholder="Search users by email, name...">
-                </div>
-            </div>
-            <button type="submit" 
-                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-micfx-600 hover:bg-micfx-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-micfx-500">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                </svg>
-                Search
-            </button>
-            @if (!string.IsNullOrEmpty(search))
-            {
-                <a href="@Url.Action("Index")" 
-                   class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                    Clear
-                </a>
-            }
+    <div class="bg-white p-4 rounded shadow-sm">
+        <form method="get" class="flex gap-4">
+            <input type="text" name="search" value="@ViewBag.Search" placeholder="Search users..." class="micfx-input flex-1">
+            <button type="submit" class="micfx-button-secondary">Search</button>
         </form>
     </div>
 
     <!-- Users Table -->
-    <div class="bg-white shadow-sm rounded-lg border border-gray-200">
-        <div class="px-6 py-4 border-b border-gray-200">
-            <h2 class="text-lg font-semibold text-gray-900">
-                Users (@totalUsers total)
-                @if (!string.IsNullOrEmpty(search))
+    <div class="bg-white rounded shadow-sm overflow-hidden">
+        <table class="w-full">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Roles</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                @foreach (var user in Model)
                 {
-                    <span class="text-sm font-normal text-gray-500">- filtered by "@search"</span>
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4">
+                            <div class="font-medium text-gray-900">@user.FullName</div>
+                        </td>
+                        <td class="px-6 py-4 text-gray-900">@user.Email</td>
+                        <td class="px-6 py-4">
+                            @if (user.Roles.Any())
+                            {
+                                <div class="flex flex-wrap gap-1">
+                                    @foreach (var role in user.Roles.Take(2))
+                                    {
+                                        <span class="inline-flex px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">@role</span>
+                                    }
+                                    @if (user.Roles.Count > 2)
+                                    {
+                                        <span class="inline-flex px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded">+@(user.Roles.Count - 2)</span>
+                                    }
+                                </div>
+                            }
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="inline-flex px-2 py-1 text-xs rounded @(user.IsActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800")">
+                                @(user.IsActive ? "Active" : "Inactive")
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-500">@user.CreatedAt.ToString("MMM dd, yyyy")</td>
+                        <td class="px-6 py-4 text-right">
+                            <a href="/admin/auth/users/edit/@user.Id" class="text-blue-600 hover:text-blue-900 mr-3">Edit</a>
+                            <a href="/admin/auth/users/details/@user.Id" class="text-gray-600 hover:text-gray-900">View</a>
+                        </td>
+                    </tr>
                 }
-            </h2>
-        </div>
-        
-        @if (Model.Any())
-        {
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Roles</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Login</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        @foreach (var user in Model)
-                        {
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex items-center">
-                                        <div class="flex-shrink-0 h-10 w-10">
-                                            <div class="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center">
-                                                <span class="text-sm font-medium text-gray-600">
-                                                    @(user.FirstName?.Substring(0, 1) ?? "U")@(user.LastName?.Substring(0, 1) ?? "")
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div class="ml-4">
-                                            <div class="text-sm font-medium text-gray-900">@user.FullName</div>
-                                            @if (!string.IsNullOrEmpty(user.JobTitle))
-                                            {
-                                                <div class="text-sm text-gray-500">@user.JobTitle</div>
-                                            }
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900">@user.Email</div>
-                                    @if (!string.IsNullOrEmpty(user.Department))
-                                    {
-                                        <div class="text-sm text-gray-500">@user.Department</div>
-                                    }
-                                </td>
-                                <td class="px-6 py-4">
-                                    @if (user.Roles.Any())
-                                    {
-                                        <div class="flex flex-wrap gap-1">
-                                            @foreach (var role in user.Roles.Take(3))
-                                            {
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-micfx-100 text-micfx-800">
-                                                    @role
-                                                </span>
-                                            }
-                                            @if (user.Roles.Count() > 3)
-                                            {
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                                    +@(user.Roles.Count() - 3) more
-                                                </span>
-                                            }
-                                        </div>
-                                    }
-                                    else
-                                    {
-                                        <span class="text-sm text-gray-500 italic">No roles assigned</span>
-                                    }
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    @if (user.IsActive)
-                                    {
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                                            </svg>
-                                            Active
-                                        </span>
-                                    }
-                                    else
-                                    {
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
-                                            </svg>
-                                            Inactive
-                                        </span>
-                                    }
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    @if (user.LastLoginAt.HasValue)
-                                    {
-                                        <span title="@user.LastLoginAt.Value.ToString("yyyy-MM-dd HH:mm:ss")">
-                                            @user.LastLoginAt.Value.ToString("MMM dd, yyyy")
-                                        </span>
-                                    }
-                                    else
-                                    {
-                                        <span class="italic">Never</span>
-                                    }
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <div class="flex items-center justify-end space-x-2">
-                                        <a href="@Url.Action("Details", new { id = user.Id })" 
-                                           class="text-micfx-600 hover:text-micfx-900 transition-colors duration-200"
-                                           title="View Details">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                            </svg>
-                                        </a>
-                                        
-                                        <a href="@Url.Action("Edit", new { id = user.Id })" 
-                                           class="text-orange-600 hover:text-orange-900 transition-colors duration-200"
-                                           title="Edit User">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                            </svg>
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Pagination -->
-            @if (totalPages > 1)
-            {
-                <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
-                    <div class="flex-1 flex justify-between sm:hidden">
-                        @if (currentPage > 1)
-                        {
-                            <a href="@Url.Action("Index", new { page = currentPage - 1, search = search })" 
-                               class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                                Previous
-                            </a>
-                        }
-                        @if (currentPage < totalPages)
-                        {
-                            <a href="@Url.Action("Index", new { page = currentPage + 1, search = search })" 
-                               class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                                Next
-                            </a>
-                        }
-                    </div>
-                    <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                        <div>
-                            <p class="text-sm text-gray-700">
-                                Showing page <span class="font-medium">@currentPage</span> of <span class="font-medium">@totalPages</span>
-                            </p>
-                        </div>
-                        <div>
-                            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                                @if (currentPage > 1)
-                                {
-                                    <a href="@Url.Action("Index", new { page = currentPage - 1, search = search })" 
-                                       class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                                        <span class="sr-only">Previous</span>
-                                        <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                                        </svg>
-                                    </a>
-                                }
-                                
-                                @for (int i = Math.Max(1, currentPage - 2); i <= Math.Min(totalPages, currentPage + 2); i++)
-                                {
-                                    if (i == currentPage)
-                                    {
-                                        <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-micfx-50 text-sm font-medium text-micfx-600">
-                                            @i
-                                        </span>
-                                    }
-                                    else
-                                    {
-                                        <a href="@Url.Action("Index", new { page = i, search = search })" 
-                                           class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                                            @i
-                                        </a>
-                                    }
-                                }
-                                
-                                @if (currentPage < totalPages)
-                                {
-                                    <a href="@Url.Action("Index", new { page = currentPage + 1, search = search })" 
-                                       class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                                        <span class="sr-only">Next</span>
-                                        <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
-                                        </svg>
-                                    </a>
-                                }
-                            </nav>
-                        </div>
-                    </div>
-                </div>
-            }
-        }
-        else
-        {
-            <div class="px-6 py-12 text-center">
-                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
-                </svg>
-                <h3 class="mt-2 text-sm font-medium text-gray-900">
-                    @if (!string.IsNullOrEmpty(search))
-                    {
-                        <span>No users found</span>
-                    }
-                    else
-                    {
-                        <span>No users found</span>
-                    }
-                </h3>
-                <p class="mt-1 text-sm text-gray-500">
-                    @if (!string.IsNullOrEmpty(search))
-                    {
-                        <span>Try adjusting your search terms.</span>
-                    }
-                    else
-                    {
-                        <span>Users will appear here once they are created.</span>
-                    }
-                </p>
-                @if (!string.IsNullOrEmpty(search))
-                {
-                    <div class="mt-6">
-                        <a href="@Url.Action("Index")" 
-                           class="inline-flex items-center px-4 py-2 bg-micfx-600 text-white rounded-md hover:bg-micfx-700 transition-colors duration-200">
-                            Clear Search
-                        </a>
-                    </div>
-                }
-            </div>
-        }
+            </tbody>
+        </table>
     </div>
+
+    <!-- Pagination -->
+    @if (ViewBag.TotalPages > 1)
+    {
+        <div class="bg-white px-4 py-3 rounded shadow-sm">
+            <div class="flex justify-between items-center">
+                <div class="text-sm text-gray-700">
+                    Showing @(((ViewBag.CurrentPage - 1) * ViewBag.PageSize) + 1) to @Math.Min(ViewBag.CurrentPage * ViewBag.PageSize, ViewBag.TotalUsers) of @ViewBag.TotalUsers results
+                </div>
+                <div class="flex space-x-2">
+                    @if (ViewBag.CurrentPage > 1)
+                    {
+                        <a href="?page=@(ViewBag.CurrentPage - 1)&search=@ViewBag.Search" class="px-3 py-1 border rounded hover:bg-gray-50">Previous</a>
+                    }
+                    @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+                    {
+                        <a href="?page=@(ViewBag.CurrentPage + 1)&search=@ViewBag.Search" class="px-3 py-1 border rounded hover:bg-gray-50">Next</a>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Empty State -->
+    @if (!Model.Any())
+    {
+        <div class="bg-white p-8 rounded shadow-sm text-center">
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No users found</h3>
+            <p class="text-gray-600 mb-4">Get started by creating your first user.</p>
+            <a href="/admin/auth/users/create" class="micfx-button-primary">
+                Create First User
+            </a>
+        </div>
+    }
 </div>
 
 @section Scripts {
@@ -371,5 +125,67 @@
                 });
             }
         });
+
+        // Toggle user active status
+        function toggleUserStatus(userId, activate) {
+            const action = activate ? 'activate' : 'deactivate';
+            const message = activate ? 
+                'Are you sure you want to activate this user?' : 
+                'Are you sure you want to deactivate this user?';
+
+            if (confirm(message)) {
+                fetch(`@Url.Action("ToggleStatus")`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                    },
+                    body: JSON.stringify({
+                        userId: userId,
+                        isActive: activate
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Failed to ' + action + ' user: ' + (data.message || 'Unknown error'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while trying to ' + action + ' the user.');
+                });
+            }
+        }
+
+        // Delete user
+        function deleteUser(userId, userName) {
+            if (confirm(`Are you sure you want to delete user "${userName}"? This action cannot be undone.`)) {
+                fetch(`@Url.Action("Delete")`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                    },
+                    body: JSON.stringify({
+                        userId: userId
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Failed to delete user: ' + (data.message || 'Unknown error'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while trying to delete the user.');
+                });
+            }
+        }
     </script>
 } 

@@ -117,9 +117,7 @@ public class AuthController : ControllerBase
                     Email = registerRequest.Email,
                     Roles = new List<string> { "User" },
                     IsActive = true,
-                    CreatedAt = DateTime.UtcNow,
-                    Department = registerRequest.Department,
-                    JobTitle = registerRequest.JobTitle
+                    CreatedAt = DateTime.UtcNow
                 }
             };
 
@@ -163,9 +161,7 @@ public class AuthController : ControllerBase
                 Roles = new List<string> { "User" },
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow.AddDays(-30),
-                LastLoginAt = DateTime.UtcNow,
-                Department = "Engineering",
-                JobTitle = "Software Developer"
+                LastLoginAt = DateTime.UtcNow
             };
 
             return Ok(ApiResponse<UserInfo>.Ok(user, "Profile retrieved successfully"));

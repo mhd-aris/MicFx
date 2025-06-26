@@ -1,0 +1,112 @@
+@model MicFx.Modules.Auth.Domain.DTOs.CreateUserViewModel
+
+@{
+    ViewData["Title"] = "Create User";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="space-y-6">
+    <!-- Header -->
+    <div>
+        <h2 class="text-2xl font-bold text-gray-900">Create New User</h2>
+        <p class="text-gray-600 mt-1">Add a new user to the system</p>
+    </div>
+
+    <!-- Form -->
+    <div class="bg-white rounded shadow-sm">
+        <form method="post" class="p-6 space-y-6">
+            <div asp-validation-summary="ModelOnly" class="text-red-600 text-sm"></div>
+
+            <!-- Basic Information -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label asp-for="FirstName" class="block text-sm font-medium text-gray-700 mb-2">First Name</label>
+                    <input asp-for="FirstName" class="micfx-input" />
+                    <span asp-validation-for="FirstName" class="text-red-600 text-sm"></span>
+                </div>
+
+                <div>
+                    <label asp-for="LastName" class="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
+                    <input asp-for="LastName" class="micfx-input" />
+                    <span asp-validation-for="LastName" class="text-red-600 text-sm"></span>
+                </div>
+            </div>
+
+            <div>
+                <label asp-for="Email" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                <input asp-for="Email" type="email" class="micfx-input" />
+                <span asp-validation-for="Email" class="text-red-600 text-sm"></span>
+            </div>
+
+            <!-- Password -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label asp-for="Password" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                    <input asp-for="Password" type="password" class="micfx-input" />
+                    <span asp-validation-for="Password" class="text-red-600 text-sm"></span>
+                </div>
+
+                <div>
+                    <label asp-for="ConfirmPassword" class="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
+                    <input asp-for="ConfirmPassword" type="password" class="micfx-input" />
+                    <span asp-validation-for="ConfirmPassword" class="text-red-600 text-sm"></span>
+                </div>
+            </div>
+
+            <!-- Roles -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Roles</label>
+                <div class="space-y-2">
+                    @for (int i = 0; i < Model.AvailableRoles.Count; i++)
+                    {
+                        var role = Model.AvailableRoles[i];
+                        <div class="flex items-center">
+                            <input type="checkbox" 
+                                   name="SelectedRoles" 
+                                   value="@role.Name" 
+                                   id="role-@i"
+                                   @(Model.SelectedRoles?.Contains(role.Name) == true ? "checked" : "")
+                                   class="rounded border-gray-300 text-micfx-600 focus:ring-micfx-500">
+                            <label for="role-@i" class="ml-2 text-sm text-gray-700">@role.Name</label>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Status -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                <div class="flex items-center">
+                    <input type="checkbox" asp-for="IsActive" class="rounded border-gray-300 text-micfx-600 focus:ring-micfx-500">
+                    <label asp-for="IsActive" class="ml-2 text-sm text-gray-700">Active</label>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex justify-end space-x-4 pt-6 border-t border-gray-100">
+                <a href="/admin/auth/users" class="micfx-button-secondary">Cancel</a>
+                <button type="submit" class="micfx-button-primary">Create User</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Password strength indicator
+            const passwordInput = document.querySelector('input[name="Password"]');
+            const confirmPasswordInput = document.querySelector('input[name="ConfirmPassword"]');
+            
+            if (passwordInput && confirmPasswordInput) {
+                confirmPasswordInput.addEventListener('input', function() {
+                    if (this.value && this.value !== passwordInput.value) {
+                        this.setCustomValidity('Passwords do not match');
+                    } else {
+                        this.setCustomValidity('');
+                    }
+                });
+            }
+        });
+    </script>
+} 

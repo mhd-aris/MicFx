@@ -44,9 +44,6 @@ namespace MicFx.Modules.Auth.Domain.DTOs
         [Required(ErrorMessage = "Confirm password is required")]
         [Compare("Password", ErrorMessage = "Password and confirmation password do not match")]
         public string ConfirmPassword { get; set; } = string.Empty;
-
-        public string? Department { get; set; }
-        public string? JobTitle { get; set; }
     }
 
     /// <summary>
@@ -76,8 +73,6 @@ namespace MicFx.Modules.Auth.Domain.DTOs
         public bool IsActive { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? LastLoginAt { get; set; }
-        public string? Department { get; set; }
-        public string? JobTitle { get; set; }
     }
 
     /// <summary>
@@ -108,8 +103,6 @@ namespace MicFx.Modules.Auth.Domain.DTOs
         [Required(ErrorMessage = "Last name is required")]
         public string LastName { get; set; } = string.Empty;
 
-        public string? Department { get; set; }
-        public string? JobTitle { get; set; }
         public string? ProfilePicture { get; set; }
     }
 }

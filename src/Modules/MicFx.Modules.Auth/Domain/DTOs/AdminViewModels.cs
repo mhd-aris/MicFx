@@ -12,8 +12,6 @@ namespace MicFx.Modules.Auth.Domain.DTOs
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
         public string FullName { get; set; } = string.Empty;
-        public string? Department { get; set; }
-        public string? JobTitle { get; set; }
         public bool IsActive { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? LastLoginAt { get; set; }
@@ -29,14 +27,48 @@ namespace MicFx.Modules.Auth.Domain.DTOs
         public string Email { get; set; } = string.Empty;
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
-        public string? Department { get; set; }
-        public string? JobTitle { get; set; }
         public bool IsActive { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public DateTime? LastLoginAt { get; set; }
         public List<string> Roles { get; set; } = new();
         public List<object> Claims { get; set; } = new();
+    }
+
+    /// <summary>
+    /// View model untuk create user
+    /// </summary>
+    public class CreateUserViewModel
+    {
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(100, MinimumLength = 6)]
+        [DataType(DataType.Password)]
+        public string Password { get; set; } = string.Empty;
+
+        [DataType(DataType.Password)]
+        [Display(Name = "Confirm password")]
+        [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
+        public string ConfirmPassword { get; set; } = string.Empty;
+
+        [Required]
+        [Display(Name = "First Name")]
+        public string FirstName { get; set; } = string.Empty;
+
+        [Required]
+        [Display(Name = "Last Name")]
+        public string LastName { get; set; } = string.Empty;
+
+        [Display(Name = "Is Active")]
+        public bool IsActive { get; set; } = true;
+
+        [Display(Name = "Roles")]
+        public List<string> SelectedRoles { get; set; } = new();
+
+        public List<RoleViewModel> AvailableRoles { get; set; } = new();
     }
 
     /// <summary>
@@ -57,12 +89,6 @@ namespace MicFx.Modules.Auth.Domain.DTOs
         [Required]
         [Display(Name = "Last Name")]
         public string LastName { get; set; } = string.Empty;
-
-        [Display(Name = "Department")]
-        public string? Department { get; set; }
-
-        [Display(Name = "Job Title")]
-        public string? JobTitle { get; set; }
 
         [Display(Name = "Is Active")]
         public bool IsActive { get; set; } = true;
@@ -85,6 +111,8 @@ namespace MicFx.Modules.Auth.Domain.DTOs
         public bool IsSystemRole { get; set; }
         public int Priority { get; set; }
         public int UserCount { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public List<string> Permissions { get; set; } = new();
     }
 
     /// <summary>
@@ -92,11 +120,10 @@ namespace MicFx.Modules.Auth.Domain.DTOs
     /// </summary>
     public class RoleDetailsViewModel : RoleViewModel
     {
-        public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public bool IsActive { get; set; }
         public List<UserViewModel> Users { get; set; } = new();
-        public List<PermissionViewModel> Permissions { get; set; } = new();
+        public new List<PermissionViewModel> Permissions { get; set; } = new();
     }
 
     /// <summary>
@@ -138,6 +165,8 @@ namespace MicFx.Modules.Auth.Domain.DTOs
         public string Category { get; set; } = string.Empty;
         public bool IsSelected { get; set; }
         public bool IsSystemPermission { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public List<string> Roles { get; set; } = new();
     }
 
     /// <summary>
@@ -151,5 +180,53 @@ namespace MicFx.Modules.Auth.Domain.DTOs
         public int TotalPermissions { get; set; }
         public List<UserViewModel> RecentUsers { get; set; } = new();
         public List<RoleViewModel> TopRoles { get; set; } = new();
+    }
+
+    /// <summary>
+    /// View model untuk security settings
+    /// </summary>
+    public class SecuritySettingsViewModel
+    {
+        [Display(Name = "Minimum Password Length")]
+        [Range(6, 20)]
+        public int MinPasswordLength { get; set; } = 8;
+
+        [Display(Name = "Password Expiry (days)")]
+        [Range(0, 365)]
+        public int PasswordExpiryDays { get; set; } = 90;
+
+        [Display(Name = "Require Uppercase")]
+        public bool RequireUppercase { get; set; } = true;
+
+        [Display(Name = "Require Lowercase")]
+        public bool RequireLowercase { get; set; } = true;
+
+        [Display(Name = "Require Numbers")]
+        public bool RequireNumbers { get; set; } = true;
+
+        [Display(Name = "Require Special Characters")]
+        public bool RequireSpecialChars { get; set; } = true;
+
+        [Display(Name = "Maximum Login Attempts")]
+        [Range(1, 10)]
+        public int MaxLoginAttempts { get; set; } = 5;
+
+        [Display(Name = "Lockout Duration (minutes)")]
+        [Range(5, 1440)]
+        public int LockoutDurationMinutes { get; set; } = 30;
+
+        [Display(Name = "Session Timeout (minutes)")]
+        [Range(15, 1440)]
+        public int SessionTimeoutMinutes { get; set; } = 120;
+
+        [Display(Name = "Max Concurrent Sessions")]
+        [Range(1, 10)]
+        public int MaxConcurrentSessions { get; set; } = 3;
+
+        [Display(Name = "Require Two-Factor Authentication")]
+        public bool RequireTwoFactor { get; set; } = false;
+
+        [Display(Name = "Allow Remember Device")]
+        public bool AllowRememberDevice { get; set; } = true;
     }
 } 

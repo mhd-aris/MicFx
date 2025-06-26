@@ -1,0 +1,140 @@
+@model MicFx.Modules.Auth.Domain.DTOs.SecuritySettingsViewModel
+
+@{
+    ViewData["Title"] = "Security Settings";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="space-y-6">
+    <!-- Header -->
+    <div>
+        <h2 class="text-2xl font-bold text-gray-900">Security Settings</h2>
+        <p class="text-gray-600 mt-1">Configure authentication and security policies</p>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="bg-green-50 border border-green-200 rounded-md p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-green-800">@TempData["SuccessMessage"]</p>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Settings Form -->
+    <div class="bg-white rounded shadow-sm">
+        <form method="post" class="p-6 space-y-6">
+            <div asp-validation-summary="ModelOnly" class="text-red-600 text-sm"></div>
+
+            <!-- Password Policy -->
+            <div>
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Password Policy</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label asp-for="MinPasswordLength" class="block text-sm font-medium text-gray-700 mb-2">Minimum Password Length</label>
+                        <input asp-for="MinPasswordLength" type="number" min="6" max="20" class="micfx-input" />
+                        <span asp-validation-for="MinPasswordLength" class="text-red-600 text-sm"></span>
+                    </div>
+
+                    <div>
+                        <label asp-for="PasswordExpiryDays" class="block text-sm font-medium text-gray-700 mb-2">Password Expiry (days)</label>
+                        <input asp-for="PasswordExpiryDays" type="number" min="0" max="365" class="micfx-input" />
+                        <span asp-validation-for="PasswordExpiryDays" class="text-red-600 text-sm"></span>
+                    </div>
+                </div>
+
+                <div class="mt-4 space-y-2">
+                    <div class="flex items-center">
+                        <input type="checkbox" asp-for="RequireUppercase" class="rounded border-gray-300 text-micfx-600 focus:ring-micfx-500">
+                        <label asp-for="RequireUppercase" class="ml-2 text-sm text-gray-700">Require uppercase letters</label>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" asp-for="RequireLowercase" class="rounded border-gray-300 text-micfx-600 focus:ring-micfx-500">
+                        <label asp-for="RequireLowercase" class="ml-2 text-sm text-gray-700">Require lowercase letters</label>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" asp-for="RequireNumbers" class="rounded border-gray-300 text-micfx-600 focus:ring-micfx-500">
+                        <label asp-for="RequireNumbers" class="ml-2 text-sm text-gray-700">Require numbers</label>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" asp-for="RequireSpecialChars" class="rounded border-gray-300 text-micfx-600 focus:ring-micfx-500">
+                        <label asp-for="RequireSpecialChars" class="ml-2 text-sm text-gray-700">Require special characters</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Account Lockout -->
+            <div class="pt-6 border-t border-gray-100">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Account Lockout</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label asp-for="MaxLoginAttempts" class="block text-sm font-medium text-gray-700 mb-2">Maximum Login Attempts</label>
+                        <input asp-for="MaxLoginAttempts" type="number" min="1" max="10" class="micfx-input" />
+                        <span asp-validation-for="MaxLoginAttempts" class="text-red-600 text-sm"></span>
+                    </div>
+
+                    <div>
+                        <label asp-for="LockoutDurationMinutes" class="block text-sm font-medium text-gray-700 mb-2">Lockout Duration (minutes)</label>
+                        <input asp-for="LockoutDurationMinutes" type="number" min="5" max="1440" class="micfx-input" />
+                        <span asp-validation-for="LockoutDurationMinutes" class="text-red-600 text-sm"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Session Management -->
+            <div class="pt-6 border-t border-gray-100">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Session Management</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label asp-for="SessionTimeoutMinutes" class="block text-sm font-medium text-gray-700 mb-2">Session Timeout (minutes)</label>
+                        <input asp-for="SessionTimeoutMinutes" type="number" min="15" max="1440" class="micfx-input" />
+                        <span asp-validation-for="SessionTimeoutMinutes" class="text-red-600 text-sm"></span>
+                    </div>
+
+                    <div>
+                        <label asp-for="MaxConcurrentSessions" class="block text-sm font-medium text-gray-700 mb-2">Max Concurrent Sessions</label>
+                        <input asp-for="MaxConcurrentSessions" type="number" min="1" max="10" class="micfx-input" />
+                        <span asp-validation-for="MaxConcurrentSessions" class="text-red-600 text-sm"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Two-Factor Authentication -->
+            <div class="pt-6 border-t border-gray-100">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Two-Factor Authentication</h3>
+                <div class="space-y-2">
+                    <div class="flex items-center">
+                        <input type="checkbox" asp-for="RequireTwoFactor" class="rounded border-gray-300 text-micfx-600 focus:ring-micfx-500">
+                        <label asp-for="RequireTwoFactor" class="ml-2 text-sm text-gray-700">Require 2FA for all users</label>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" asp-for="AllowRememberDevice" class="rounded border-gray-300 text-micfx-600 focus:ring-micfx-500">
+                        <label asp-for="AllowRememberDevice" class="ml-2 text-sm text-gray-700">Allow "Remember this device"</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex justify-end space-x-4 pt-6 border-t border-gray-100">
+                <button type="reset" class="micfx-button-secondary">Reset</button>
+                <button type="submit" class="micfx-button-primary">Save Settings</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add any JavaScript for form validation or enhancement
+            console.log('Security Settings page loaded');
+        });
+    </script>
+} 

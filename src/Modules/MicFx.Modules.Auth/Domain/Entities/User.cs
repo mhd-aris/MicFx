@@ -50,18 +50,6 @@ namespace MicFx.Modules.Auth.Domain.Entities
         public string? ProfilePicture { get; set; }
 
         /// <summary>
-        /// User's department
-        /// </summary>
-        [StringLength(100)]
-        public string? Department { get; set; }
-
-        /// <summary>
-        /// User's job title
-        /// </summary>
-        [StringLength(100)]
-        public string? JobTitle { get; set; }
-
-        /// <summary>
         /// Who created this user account
         /// </summary>
         [StringLength(100)]

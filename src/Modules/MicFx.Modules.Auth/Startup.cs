@@ -105,6 +105,9 @@ namespace MicFx.Modules.Auth
             // 5. Add MicFx Permission-based Authorization System
             services.AddMicFxPermissions();
 
+            // Add HttpContextAccessor for TagHelpers
+            services.AddHttpContextAccessor();
+
             // 6. Register Services
             services.AddScoped<IAuthService, AuthService>();
             services.AddHostedService<AuthDatabaseInitializer>();

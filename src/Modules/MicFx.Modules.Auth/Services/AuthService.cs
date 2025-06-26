@@ -118,8 +118,6 @@ namespace MicFx.Modules.Auth.Services
                     Email = request.Email,
                     FirstName = request.FirstName,
                     LastName = request.LastName,
-                    Department = request.Department,
-                    JobTitle = request.JobTitle,
                     IsActive = true
                 };
 
@@ -442,8 +440,6 @@ namespace MicFx.Modules.Auth.Services
                 FirstName = user.FirstName ?? "",
                 LastName = user.LastName ?? "",
                 FullName = $"{user.FirstName} {user.LastName}".Trim(),
-                Department = user.Department,
-                JobTitle = user.JobTitle,
                 IsActive = user.IsActive,
                 LastLoginAt = user.LastLoginAt,
                 Roles = roles.ToList()

@@ -51,8 +51,6 @@ public class AuthDbContext : IdentityDbContext<User, Role, string,
         {
             entity.Property(e => e.FirstName).HasMaxLength(50).IsRequired();
             entity.Property(e => e.LastName).HasMaxLength(50).IsRequired();
-            entity.Property(e => e.Department).HasMaxLength(100);
-            entity.Property(e => e.JobTitle).HasMaxLength(100);
             entity.Property(e => e.ProfilePicture).HasMaxLength(500);
             entity.Property(e => e.CreatedBy).HasMaxLength(100);
             entity.Property(e => e.UpdatedBy).HasMaxLength(100);

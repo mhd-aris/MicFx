@@ -51,6 +51,14 @@ namespace MicFx.Modules.Auth.Areas.Admin.Controllers
             foreach (var role in roles)
             {
                 var userCount = await _userManager.GetUsersInRoleAsync(role.Name ?? "");
+                
+                // Get permissions for this role
+                var permissions = await _context.RolePermissions
+                    .Where(rp => rp.RoleId == role.Id && rp.IsActive)
+                    .Include(rp => rp.Permission)
+                    .Select(rp => rp.Permission.DisplayName ?? rp.Permission.Name ?? "")
+                    .ToListAsync();
+
                 roleViewModels.Add(new RoleViewModel
                 {
                     Id = role.Id,
@@ -58,7 +66,9 @@ namespace MicFx.Modules.Auth.Areas.Admin.Controllers
                     Description = role.Description ?? "",
                     IsSystemRole = role.IsSystemRole,
                     Priority = role.Priority,
-                    UserCount = userCount.Count
+                    UserCount = userCount.Count,
+                    CreatedAt = role.CreatedAt,
+                    Permissions = permissions
                 });
             }
 
@@ -333,6 +343,9 @@ namespace MicFx.Modules.Auth.Areas.Admin.Controllers
                     IsSelected = model.SelectedPermissions.Contains(p.Id.ToString())
                 }).ToList();
 
+                // Ensure other properties are preserved
+                model.IsSystemRole = role.IsSystemRole;
+                
                 return View(model);
             }
 
@@ -350,6 +363,29 @@ namespace MicFx.Modules.Auth.Areas.Admin.Controllers
                 {
                     ModelState.AddModelError("", error.Description);
                 }
+                
+                // Reload permissions for error case
+                var allPermissions = await _context.Permissions
+                    .Where(p => p.IsActive)
+                    .OrderBy(p => p.Module)
+                    .ThenBy(p => p.Category)
+                    .ThenBy(p => p.DisplayName)
+                    .ToListAsync();
+
+                model.AvailablePermissions = allPermissions.Select(p => new PermissionViewModel
+                {
+                    Id = p.Id.ToString(),
+                    Name = p.Name ?? "",
+                    DisplayName = p.DisplayName ?? "",
+                    Description = p.Description ?? "",
+                    Module = p.Module ?? "",
+                    Category = p.Category ?? "",
+                    IsSystemPermission = p.IsSystemPermission,
+                    IsSelected = model.SelectedPermissions.Contains(p.Id.ToString())
+                }).ToList();
+
+                model.IsSystemRole = role.IsSystemRole;
+                
                 return View(model);
             }
 

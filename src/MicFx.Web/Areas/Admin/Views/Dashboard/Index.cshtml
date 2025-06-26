@@ -1,148 +1,159 @@
-@model DashboardViewModel
+@model MicFx.Web.Areas.Admin.Controllers.DashboardViewModel
 @{
     ViewData["Title"] = "Dashboard";
 }
 
-<!-- Welcome Header -->
-<div class="mb-6">
-    <h1 class="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-    <p class="text-gray-600">Manage MicFx Framework easily</p>
-</div>
-
-<!-- System Status Cards -->
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-    <!-- System Status -->
-    <div class="bg-white rounded-lg border border-gray-200 p-6">
-        <div class="flex items-center">
-            <div class="p-2 bg-green-100 rounded mr-3">
-                <div class="w-3 h-3 bg-green-500 rounded-full"></div>
-            </div>
+<div class="space-y-8">
+    <!-- Welcome Section -->
+    <div class="micfx-card">
+        <div class="flex items-center justify-between">
             <div>
-                <p class="text-sm text-gray-600">System Status</p>
-                <p class="text-lg font-semibold text-gray-900">Online</p>
+                <h2 class="text-2xl font-bold text-gray-900">Welcome to MicFx Admin</h2>
+                <p class="text-gray-600 mt-2">Manage your modules, users, and system settings from this central dashboard.</p>
             </div>
-        </div>
-    </div>
-
-    <!-- Active Modules -->
-    <div class="bg-white rounded-lg border border-gray-200 p-6">
-        <div class="flex items-center">
-            <div class="p-2 bg-blue-100 rounded mr-3">
-                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                </svg>
-            </div>
-            <div>
-                <p class="text-sm text-gray-600">Active Modules</p>
-                <p class="text-lg font-semibold text-gray-900">@Model.ModuleInfo.TotalModules</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Environment -->
-    <div class="bg-white rounded-lg border border-gray-200 p-6">
-        <div class="flex items-center">
-            <div class="p-2 bg-gray-100 rounded mr-3">
-                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9"></path>
-                </svg>
-            </div>
-            <div>
-                <p class="text-sm text-gray-600">Environment</p>
-                <p class="text-lg font-semibold text-gray-900">@Model.SystemInfo.Environment</p>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- System Information -->
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-    <!-- System Info -->
-    <div class="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">System Information</h3>
-        <div class="space-y-3">
-            <div class="flex justify-between">
-                <span class="text-gray-600">Application:</span>
-                <span class="font-medium">@Model.SystemInfo.ApplicationName</span>
-            </div>
-            <div class="flex justify-between">
-                <span class="text-gray-600">Version:</span>
-                <span class="font-medium">@Model.SystemInfo.Version</span>
-            </div>
-            <div class="flex justify-between">
-                <span class="text-gray-600">Platform:</span>
-                <span class="font-medium">.NET 8.0</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- Loaded Modules -->
-    <div class="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Loaded Modules</h3>
-        <div class="space-y-2">
-            @foreach (var module in Model.ModuleInfo.LoadedModules)
-            {
-                <div class="flex justify-between items-center">
-                    <span class="text-gray-700">@module</span>
-                    <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Active</span>
+            <div class="hidden md:block">
+                <div class="w-16 h-16 bg-micfx-100 rounded-lg flex items-center justify-center">
+                    <svg class="w-8 h-8 text-micfx-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                    </svg>
                 </div>
-            }
+            </div>
         </div>
     </div>
-</div>
 
-<!-- Quick Actions -->
-<div class="bg-white rounded-lg border border-gray-200 p-6">
-    <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-    
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <a href="/admin/diagnostics" class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-            <div class="p-2 bg-blue-100 rounded mr-3">
-                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                </svg>
+    <!-- Quick Stats -->
+    <div class="grid md:grid-cols-3 gap-6">
+        <div class="micfx-card">
+            <div class="flex items-center">
+                <div class="p-3 bg-blue-100 rounded-lg">
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Active Modules</p>
+                    <p class="text-2xl font-bold text-gray-900">@Model.ModuleInfo.TotalModules</p>
+                </div>
             </div>
-            <div>
-                <p class="font-medium text-gray-900">Diagnostics</p>
-                <p class="text-sm text-gray-600">System diagnostics</p>
-            </div>
-        </a>
+        </div>
 
-        <a href="/admin/auth/users" class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-            <div class="p-2 bg-green-100 rounded mr-3">
-                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
-                </svg>
+        <div class="micfx-card">
+            <div class="flex items-center">
+                <div class="p-3 bg-green-100 rounded-lg">
+                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Navigation Items</p>
+                    <p class="text-2xl font-bold text-gray-900">@Model.ModuleInfo.TotalNavigationItems</p>
+                </div>
             </div>
-            <div>
-                <p class="font-medium text-gray-900">Users</p>
-                <p class="text-sm text-gray-600">Manage users</p>
-            </div>
-        </a>
+        </div>
 
-        <a href="/admin/auth/roles" class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-            <div class="p-2 bg-purple-100 rounded mr-3">
-                <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-                </svg>
+        <div class="micfx-card">
+            <div class="flex items-center">
+                <div class="p-3 bg-purple-100 rounded-lg">
+                    <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Environment</p>
+                    <p class="text-2xl font-bold text-green-600">@Model.SystemInfo.Environment</p>
+                </div>
             </div>
-            <div>
-                <p class="font-medium text-gray-900">Roles</p>
-                <p class="text-sm text-gray-600">Manage roles</p>
-            </div>
-        </a>
+        </div>
+    </div>
 
-        <a href="/health" target="_blank" class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-            <div class="p-2 bg-orange-100 rounded mr-3">
-                <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-                </svg>
+    <!-- Quick Actions -->
+    <div class="micfx-card">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <a href="/admin/auth/users" class="group p-4 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-colors duration-200">
+                <div class="flex items-center">
+                    <div class="p-2 bg-blue-100 rounded-lg group-hover:bg-blue-200 transition-colors duration-200">
+                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-gray-900">Manage Users</p>
+                        <p class="text-xs text-gray-500">Add, edit, or remove users</p>
+                    </div>
+                </div>
+            </a>
+
+            <a href="/admin/auth/roles" class="group p-4 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-colors duration-200">
+                <div class="flex items-center">
+                    <div class="p-2 bg-green-100 rounded-lg group-hover:bg-green-200 transition-colors duration-200">
+                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-gray-900">Manage Roles</p>
+                        <p class="text-xs text-gray-500">Configure user roles and permissions</p>
+                    </div>
+                </div>
+            </a>
+
+            <a href="/admin/hello-world" class="group p-4 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-colors duration-200">
+                <div class="flex items-center">
+                    <div class="p-2 bg-purple-100 rounded-lg group-hover:bg-purple-200 transition-colors duration-200">
+                        <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10m0 0V6a2 2 0 00-2-2H9a2 2 0 00-2 2v2m10 0v10a2 2 0 01-2 2H9a2 2 0 01-2-2V8m10 0H7m5 5.5a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-gray-900">Hello World</p>
+                        <p class="text-xs text-gray-500">View module statistics</p>
+                    </div>
+                </div>
+            </a>
+
+            <a href="/admin/diagnostics" class="group p-4 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-colors duration-200">
+                <div class="flex items-center">
+                    <div class="p-2 bg-orange-100 rounded-lg group-hover:bg-orange-200 transition-colors duration-200">
+                        <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-gray-900">System Info</p>
+                        <p class="text-xs text-gray-500">View system diagnostics</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="micfx-card">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
+        <div class="space-y-4">
+            <div class="flex items-center p-3 bg-gray-50 rounded-lg">
+                <div class="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
+                <div class="flex-1">
+                    <p class="text-sm text-gray-900">System started successfully</p>
+                    <p class="text-xs text-gray-500">2 minutes ago</p>
+                </div>
             </div>
-            <div>
-                <p class="font-medium text-gray-900">Health</p>
-                <p class="text-sm text-gray-600">System health</p>
+            <div class="flex items-center p-3 bg-gray-50 rounded-lg">
+                <div class="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
+                <div class="flex-1">
+                    <p class="text-sm text-gray-900">Auth module loaded</p>
+                    <p class="text-xs text-gray-500">5 minutes ago</p>
+                </div>
             </div>
-        </a>
+            <div class="flex items-center p-3 bg-gray-50 rounded-lg">
+                <div class="w-2 h-2 bg-purple-500 rounded-full mr-3"></div>
+                <div class="flex-1">
+                    <p class="text-sm text-gray-900">HelloWorld module loaded</p>
+                    <p class="text-xs text-gray-500">5 minutes ago</p>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 

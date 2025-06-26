@@ -1,0 +1,121 @@
+@model MicFx.Modules.Auth.Domain.DTOs.AdminDashboardViewModel
+
+@{
+    ViewData["Title"] = "Auth Dashboard";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="space-y-6">
+    <!-- Header -->
+    <div>
+        <h2 class="text-2xl font-bold text-gray-900">Auth Dashboard</h2>
+        <p class="text-gray-600 mt-1">Overview of authentication and authorization system</p>
+    </div>
+
+    <!-- Statistics -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-white p-4 rounded shadow-sm">
+            <div class="text-sm text-gray-600">Total Users</div>
+            <div class="text-2xl font-bold">@Model.TotalUsers</div>
+        </div>
+        <div class="bg-white p-4 rounded shadow-sm">
+            <div class="text-sm text-gray-600">Active Users</div>
+            <div class="text-2xl font-bold">@Model.ActiveUsers</div>
+        </div>
+        <div class="bg-white p-4 rounded shadow-sm">
+            <div class="text-sm text-gray-600">Total Roles</div>
+            <div class="text-2xl font-bold">@Model.TotalRoles</div>
+        </div>
+        <div class="bg-white p-4 rounded shadow-sm">
+            <div class="text-sm text-gray-600">Total Permissions</div>
+            <div class="text-2xl font-bold">@Model.TotalPermissions</div>
+        </div>
+    </div>
+
+    <!-- Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Recent Users -->
+        <div class="bg-white rounded shadow-sm">
+            <div class="p-4 border-b border-gray-100">
+                <h3 class="font-semibold">Recent Users</h3>
+            </div>
+            <div class="p-4">
+                @if (Model.RecentUsers.Any())
+                {
+                    <div class="space-y-3">
+                        @foreach (var user in Model.RecentUsers)
+                        {
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <div class="font-medium">@user.FullName</div>
+                                    <div class="text-sm text-gray-600">@user.Email</div>
+                                </div>
+                                <span class="text-sm @(user.IsActive ? "text-green-600" : "text-red-600")">
+                                    @(user.IsActive ? "Active" : "Inactive")
+                                </span>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-gray-500">No users found</p>
+                }
+            </div>
+        </div>
+
+        <!-- Top Roles -->
+        <div class="bg-white rounded shadow-sm">
+            <div class="p-4 border-b border-gray-100">
+                <h3 class="font-semibold">Top Roles</h3>
+            </div>
+            <div class="p-4">
+                @if (Model.TopRoles.Any())
+                {
+                    <div class="space-y-3">
+                        @foreach (var role in Model.TopRoles)
+                        {
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <div class="font-medium">@role.Name</div>
+                                    @if (!string.IsNullOrEmpty(role.Description))
+                                    {
+                                        <div class="text-sm text-gray-600">@role.Description</div>
+                                    }
+                                </div>
+                                <span class="text-sm text-blue-600">@role.UserCount users</span>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-gray-500">No roles found</p>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="bg-white rounded shadow-sm">
+        <div class="p-4 border-b border-gray-100">
+            <h3 class="font-semibold">Quick Actions</h3>
+        </div>
+        <div class="p-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <a href="/admin/auth/users/create" class="p-4 rounded hover:bg-gray-50">
+                    <div class="font-medium">Add User</div>
+                    <div class="text-sm text-gray-600">Create a new user account</div>
+                </a>
+                <a href="/admin/auth/roles/create" class="p-4 rounded hover:bg-gray-50">
+                    <div class="font-medium">Add Role</div>
+                    <div class="text-sm text-gray-600">Create a new role</div>
+                </a>
+                <a href="/admin/auth/permissions" class="p-4 rounded hover:bg-gray-50">
+                    <div class="font-medium">Manage Permissions</div>
+                    <div class="text-sm text-gray-600">View and edit permissions</div>
+                </a>
+            </div>
+        </div>
+    </div>
+</div> 

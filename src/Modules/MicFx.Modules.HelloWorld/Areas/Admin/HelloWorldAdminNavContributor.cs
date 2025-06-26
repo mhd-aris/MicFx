@@ -17,7 +17,7 @@ namespace MicFx.Modules.HelloWorld.Areas.Admin
                     Url = "/admin/hello-world",
                     Icon = "hello",
                     Order = 10,
-                    Category = "Modules",
+                    Category = "Demo Modules",
                     RequiredRoles = null, // Temporarily disabled for demo
                     IsActive = true
                 },
@@ -27,7 +27,7 @@ namespace MicFx.Modules.HelloWorld.Areas.Admin
                     Url = "/admin/hello-world/settings",
                     Icon = "settings",
                     Order = 20,
-                    Category = "Modules",
+                    Category = "Demo Modules",
                     RequiredRoles = null, // Temporarily disabled for demo
                     IsActive = true
                 }

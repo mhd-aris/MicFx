@@ -113,7 +113,5 @@ namespace MicFx.Modules.Auth.Domain.Configuration
         public string Password { get; set; } = "Admin123!";
         public string FirstName { get; set; } = "System";
         public string LastName { get; set; } = "Admin";
-        public string Department { get; set; } = "IT";
-        public string JobTitle { get; set; } = "System Administrator";
     }
 }

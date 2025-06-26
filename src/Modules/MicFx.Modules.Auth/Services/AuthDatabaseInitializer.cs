@@ -50,8 +50,6 @@ namespace MicFx.Modules.Auth.Services
                     Email = adminEmail,
                     FirstName = config.DefaultAdmin.FirstName,
                     LastName = config.DefaultAdmin.LastName,
-                    Department = config.DefaultAdmin.Department,
-                    JobTitle = config.DefaultAdmin.JobTitle,
                     IsActive = true,
                     EmailConfirmed = true
                 };

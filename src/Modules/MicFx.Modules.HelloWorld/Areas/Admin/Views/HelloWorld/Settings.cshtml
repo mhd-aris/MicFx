@@ -1,193 +1,67 @@
 @model MicFx.Modules.HelloWorld.Areas.Admin.Controllers.HelloWorldSettingsViewModel
 
 @{
-    ViewData["Title"] = "Hello World Settings";
+    ViewData["Title"] = "HelloWorld Settings";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
 }
 
-<!-- Settings Header -->
-<div class="mb-6">
-    <div class="flex items-center justify-between">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-900">HelloWorld Settings</h1>
-            <p class="text-gray-600 mt-1">Configure the HelloWorld module behavior</p>
-        </div>
-        <div>
-            <a href="@Url.Action("Index", "HelloWorld", new { area = "Admin" })" 
-               class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-200">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                </svg>
-                Back to Dashboard
-            </a>
-        </div>
+<div class="space-y-6">
+    <!-- Header -->
+    <div>
+        <h2 class="text-2xl font-bold text-gray-900">HelloWorld Settings</h2>
+        <p class="text-gray-600 mt-1">Configure HelloWorld module settings</p>
     </div>
-</div>
 
-<!-- Success Message -->
-@if (TempData["SuccessMessage"] != null)
-{
-    <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-        <div class="flex items-center">
-            <div class="p-1 bg-green-100 rounded-full mr-3">
-                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                </svg>
-            </div>
-            <p class="text-green-800 font-medium">@TempData["SuccessMessage"]</p>
-        </div>
-    </div>
-}
+    <!-- Settings Form -->
+    <div class="bg-white rounded shadow-sm">
+        <form method="post" class="p-6 space-y-6">
+            <div asp-validation-summary="ModelOnly" class="text-red-600 text-sm"></div>
 
-<!-- Settings Form -->
-<div class="bg-white rounded-lg shadow-sm border border-gray-200">
-    <form asp-action="Settings" asp-controller="HelloWorld" asp-area="Admin" method="post" class="p-6">
-        @Html.AntiForgeryToken()
-        
-        <!-- General Settings Section -->
-        <div class="mb-8">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <div class="p-2 bg-blue-100 rounded-lg mr-3">
-                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"></path>
-                    </svg>
-                </div>
-                General Settings
-            </h3>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Enable Greeting -->
-                <div class="space-y-2">
-                    <label class="flex items-center">
-                        <input type="checkbox" asp-for="EnableGreeting" 
-                               class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2">
-                        <span class="ml-2 text-sm font-medium text-gray-900">Enable Greeting</span>
-                    </label>
-                    <p class="text-sm text-gray-600">Allow the module to display greeting messages</p>
-                    <span asp-validation-for="EnableGreeting" class="text-red-600 text-sm"></span>
-                </div>
-
-                <!-- Allow Custom Messages -->
-                <div class="space-y-2">
-                    <label class="flex items-center">
-                        <input type="checkbox" asp-for="AllowCustomMessages" 
-                               class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2">
-                        <span class="ml-2 text-sm font-medium text-gray-900">Allow Custom Messages</span>
-                    </label>
-                    <p class="text-sm text-gray-600">Allow users to provide custom greeting messages</p>
-                    <span asp-validation-for="AllowCustomMessages" class="text-red-600 text-sm"></span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Message Settings Section -->
-        <div class="mb-8">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <div class="p-2 bg-green-100 rounded-lg mr-3">
-                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-                    </svg>
-                </div>
-                Message Configuration
-            </h3>
-            
-            <div class="space-y-6">
-                <!-- Default Message -->
+            <!-- Message Settings -->
+            <div>
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Message Settings</h3>
                 <div>
-                    <label asp-for="DefaultMessage" class="block text-sm font-medium text-gray-700 mb-2">
-                        Default Message
-                    </label>
-                    <input asp-for="DefaultMessage" type="text" 
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                           placeholder="Enter the default greeting message">
-                    <p class="text-sm text-gray-600 mt-1">This message will be displayed when no custom message is provided</p>
+                    <label asp-for="DefaultMessage" class="block text-sm font-medium text-gray-700 mb-2">Default Message</label>
+                    <input asp-for="DefaultMessage" class="micfx-input" />
                     <span asp-validation-for="DefaultMessage" class="text-red-600 text-sm"></span>
                 </div>
+            </div>
 
-                <!-- Max Message Length -->
-                <div>
-                    <label asp-for="MaxMessageLength" class="block text-sm font-medium text-gray-700 mb-2">
-                        Maximum Message Length
-                    </label>
-                    <div class="flex items-center space-x-3">
-                        <input asp-for="MaxMessageLength" type="number" min="10" max="500"
-                               class="w-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        <span class="text-sm text-gray-600">characters</span>
+            <!-- Display Settings -->
+            <div class="pt-6 border-t border-gray-100">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Display Settings</h3>
+                <div class="space-y-4">
+                    <div class="flex items-center">
+                        <input type="checkbox" asp-for="ShowTimestamp" class="rounded border-gray-300 text-micfx-600 focus:ring-micfx-500">
+                        <label asp-for="ShowTimestamp" class="ml-2 text-sm text-gray-700">Show timestamp</label>
                     </div>
-                    <p class="text-sm text-gray-600 mt-1">Maximum allowed length for custom messages (10-500 characters)</p>
-                    <span asp-validation-for="MaxMessageLength" class="text-red-600 text-sm"></span>
+                    <div class="flex items-center">
+                        <input type="checkbox" asp-for="ShowUserInfo" class="rounded border-gray-300 text-micfx-600 focus:ring-micfx-500">
+                        <label asp-for="ShowUserInfo" class="ml-2 text-sm text-gray-700">Show user information</label>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Preview Section -->
-        <div class="mb-8 p-4 bg-gray-50 rounded-lg border border-gray-200">
-            <h4 class="text-md font-semibold text-gray-900 mb-3 flex items-center">
-                <svg class="w-4 h-4 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                </svg>
-                Preview
-            </h4>
-            <div class="bg-white p-4 rounded border border-gray-200">
-                <p class="text-gray-700" id="messagePreview">@Model.DefaultMessage</p>
+            <!-- API Settings -->
+            <div class="pt-6 border-t border-gray-100">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">API Settings</h3>
+                <div class="space-y-4">
+                    <div class="flex items-center">
+                        <input type="checkbox" asp-for="EnableApi" class="rounded border-gray-300 text-micfx-600 focus:ring-micfx-500">
+                        <label asp-for="EnableApi" class="ml-2 text-sm text-gray-700">Enable API endpoints</label>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" asp-for="RequireAuthentication" class="rounded border-gray-300 text-micfx-600 focus:ring-micfx-500">
+                        <label asp-for="RequireAuthentication" class="ml-2 text-sm text-gray-700">Require authentication for API</label>
+                    </div>
+                </div>
             </div>
-        </div>
 
-        <!-- Action Buttons -->
-        <div class="flex items-center justify-between pt-6 border-t border-gray-200">
-            <div class="flex space-x-3">
-                <button type="submit" 
-                        class="inline-flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                    Save Settings
-                </button>
-                
-                <button type="button" onclick="resetForm()" 
-                        class="inline-flex items-center px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors duration-200">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                    </svg>
-                    Reset
-                </button>
+            <!-- Actions -->
+            <div class="flex justify-end space-x-4 pt-6 border-t border-gray-100">
+                <a href="/admin/helloworld" class="micfx-button-secondary">Cancel</a>
+                <button type="submit" class="micfx-button-primary">Save Settings</button>
             </div>
-            
-            <div class="text-sm text-gray-500">
-                <span class="flex items-center">
-                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                    Changes will take effect immediately
-                </span>
-            </div>
-        </div>
-    </form>
-</div>
-
-<script>
-// Update preview when default message changes
-document.getElementById('@Html.IdFor(m => m.DefaultMessage)').addEventListener('input', function() {
-    document.getElementById('messagePreview').textContent = this.value || 'No message set';
-});
-
-// Reset form to original values
-function resetForm() {
-    if (confirm('Are you sure you want to reset all settings to their original values?')) {
-        document.querySelector('form').reset();
-        document.getElementById('messagePreview').textContent = '@Model.DefaultMessage';
-    }
-}
-
-// Form validation
-document.querySelector('form').addEventListener('submit', function(e) {
-    const defaultMessage = document.getElementById('@Html.IdFor(m => m.DefaultMessage)').value;
-    const maxLength = parseInt(document.getElementById('@Html.IdFor(m => m.MaxMessageLength)').value);
-    
-    if (defaultMessage.length > maxLength) {
-        e.preventDefault();
-        alert('Default message length exceeds the maximum allowed length.');
-        return false;
-    }
-});
-</script> 
+        </form>
+    </div>
+</div> 
