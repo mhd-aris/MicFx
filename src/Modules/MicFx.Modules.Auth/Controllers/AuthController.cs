@@ -3,9 +3,11 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using MicFx.Modules.Auth.Domain.DTOs;
 using MicFx.Modules.Auth.Domain.Entities;
+using MicFx.Modules.Auth.Domain.Exceptions;
 using MicFx.Modules.Auth.Services;
 using System.Text;
 using Microsoft.Extensions.Logging;
+using MicFx.SharedKernel.Common;
 
 namespace MicFx.Modules.Auth.Controllers
 {
@@ -43,10 +45,10 @@ namespace MicFx.Modules.Auth.Controllers
 
         // POST: /auth/login
         [HttpPost]
-        // [ValidateAntiForgeryToken] // Temporarily disabled for debugging
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginRequest? model, string? returnUrl = null)
         {
-            _logger.LogDebug("Processing login request for {Email}", model?.Email ?? "unknown");
+            ViewData["Title"] = "Login";
 
             if (model == null)
             {
@@ -61,28 +63,59 @@ namespace MicFx.Modules.Auth.Controllers
                 return View(model);
             }
 
-            _logger.LogDebug("Calling AuthService.LoginAsync for {Email}", model.Email);
-            var result = await _authService.LoginAsync(model);
-
-            _logger.LogInformation("Login result for {Email}: {IsSuccess}", model.Email, result.IsSuccess);
-
-            if (result.IsSuccess)
+            try
             {
-                _logger.LogInformation("✅ Login successful for {Email}, redirecting", model.Email);
+                _logger.LogDebug("Calling AuthService.LoginAsync for {Email}", model.Email);
+                var result = await _authService.LoginAsync(model);
 
-                if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                _logger.LogInformation("Login result for {Email}: {IsSuccess}", model.Email, result.IsSuccess);
+
+                if (result.IsSuccess)
                 {
-                    return LocalRedirect(returnUrl);
+                    _logger.LogInformation("✅ Login successful for {Email}, redirecting", model.Email);
+
+                    if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                    {
+                        return LocalRedirect(returnUrl);
+                    }
+
+                    // Use LocalRedirect instead of RedirectToAction to avoid POST method issues
+                    return LocalRedirect("/");
                 }
 
-                // Use LocalRedirect instead of RedirectToAction to avoid POST method issues
-                return LocalRedirect("/");
+                _logger.LogWarning("❌ Login failed for {Email}: {Message}", model.Email, result.Message);
+                ModelState.AddModelError(string.Empty, result.Message);
+                ViewData["ReturnUrl"] = returnUrl;
+                return View(model);
             }
-
-            _logger.LogWarning("❌ Login failed for {Email}: {Message}", model.Email, result.Message);
-            ModelState.AddModelError(string.Empty, result.Message);
-            ViewData["ReturnUrl"] = returnUrl;
-            return View(model);
+            catch (InvalidCredentialsException ex)
+            {
+                _logger.LogWarning("❌ Invalid credentials for {Email}: {Message}", model.Email, ex.Message);
+                ModelState.AddModelError(string.Empty, "Invalid email or password. Please try again.");
+                ViewData["ReturnUrl"] = returnUrl;
+                return View(model);
+            }
+            catch (UserNotFoundException ex)
+            {
+                _logger.LogWarning("❌ User not found for {Email}: {Message}", model.Email, ex.Message);
+                ModelState.AddModelError(string.Empty, "Invalid email or password. Please try again.");
+                ViewData["ReturnUrl"] = returnUrl;
+                return View(model);
+            }
+            catch (AccountLockedException ex)
+            {
+                _logger.LogWarning("❌ User locked out for {Email}: {Message}", model.Email, ex.Message);
+                ModelState.AddModelError(string.Empty, "Account is temporarily locked. Please try again later.");
+                ViewData["ReturnUrl"] = returnUrl;
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Unexpected error during login for {Email}", model.Email);
+                ModelState.AddModelError(string.Empty, "An error occurred during login. Please try again.");
+                ViewData["ReturnUrl"] = returnUrl;
+                return View(model);
+            }
         }
 
         // GET: /auth/register
