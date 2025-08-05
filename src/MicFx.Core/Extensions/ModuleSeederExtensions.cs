@@ -5,16 +5,17 @@ using MicFx.SharedKernel.Modularity;
 namespace MicFx.Core.Extensions;
 
 /// <summary>
-/// Extension methods untuk module seeder functionality
+/// Extension methods for module seeder functionality
+/// Handles data seeding across all registered modules with proper error handling
 /// </summary>
 public static class ModuleSeederExtensions
 {
     /// <summary>
-    /// Execute semua registered module seeders
-    /// Dijalankan saat application startup untuk initialize module data
+    /// Execute all registered module seeders in priority order
+    /// Runs during application startup to initialize module data
     /// </summary>
-    /// <param name="serviceProvider">Service provider</param>
-    /// <returns>Task yang complete ketika semua seeding selesai</returns>
+    /// <param name="serviceProvider">Service provider for dependency resolution</param>
+    /// <returns>Task that completes when all seeding is finished</returns>
     public static async Task RunModuleSeedersAsync(this IServiceProvider serviceProvider)
     {
         using var scope = serviceProvider.CreateScope();
@@ -47,9 +48,8 @@ public static class ModuleSeederExtensions
             {
                 logger.LogError(ex, "❌ Failed to seed module: {ModuleName}", seeder.ModuleName);
                 
-                // Decision: Continue dengan seeding module lain atau throw?
-                // Untuk development, lebih baik continue supaya tidak block startup
-                // Untuk production, bisa di-configure lewat setting
+                // Continue with other seeders to prevent blocking startup
+                // For production, this behavior can be configured via settings
                 continue;
             }
         }

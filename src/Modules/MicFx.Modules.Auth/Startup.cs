@@ -44,6 +44,7 @@ namespace MicFx.Modules.Auth
                 {
                     throw new InvalidOperationException("Shared connection string 'DefaultConnection' not found in configuration.");
                 }
+                
                 options.UseSqlServer(connectionString);
             });
 
@@ -110,7 +111,7 @@ namespace MicFx.Modules.Auth
 
             // 6. Register Services
             services.AddScoped<IAuthService, AuthService>();
-            services.AddHostedService<AuthDatabaseInitializer>();
+            // Remove AuthDatabaseInitializer - handled centrally by DatabaseExtensions
             
             // 7. Register Module Seeder untuk data initialization
             services.AddScoped<IModuleSeeder, AuthModuleSeeder>();

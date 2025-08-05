@@ -6,7 +6,7 @@ using MicFx.SharedKernel.Interfaces;
 namespace MicFx.Web.Admin.Services
 {
     /// <summary>
-    /// Simplified service for collecting admin navigation items from modules
+    /// Service for collecting admin navigation items from modules
     /// </summary>
     public class AdminNavDiscoveryService
     {

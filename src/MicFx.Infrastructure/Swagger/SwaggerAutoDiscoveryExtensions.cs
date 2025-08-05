@@ -10,15 +10,11 @@ using MicFx.SharedKernel.Common;
 namespace MicFx.Infrastructure.Swagger;
 
 /// <summary>
-/// Simplified Swagger configuration for MicFx Framework
-/// SIMPLIFIED: Removed over-engineered auto-discovery and routing type detection
+/// Swagger configuration for MicFx Framework
 /// </summary>
 public static class SwaggerAutoDiscoveryExtensions
 {
-    /// <summary>
-    /// Adds Swagger with simplified configuration
-    /// SIMPLIFIED: Basic Swagger setup without complex auto-discovery
-    /// </summary>
+   
     public static IServiceCollection AddMicFxSwaggerInfrastructure(this IServiceCollection services)
     {
         services.AddSwaggerGen(options =>
@@ -36,7 +32,7 @@ public static class SwaggerAutoDiscoveryExtensions
                 }
             });
 
-            // Simple grouping by controller name without complex routing type detection
+            // Grouping by controller name without complex routing type detection
             options.TagActionsBy(api =>
             {
                 var controllerName = api.ActionDescriptor.RouteValues["controller"] ?? "Framework";
@@ -83,7 +79,7 @@ public static class SwaggerAutoDiscoveryExtensions
     }
 
     /// <summary>
-    /// Uses Swagger UI with simplified MicFx configuration
+    /// Uses Swagger UI with MicFx configuration
     /// </summary>
     public static IApplicationBuilder UseMicFxSwaggerInfrastructure(this IApplicationBuilder app, IWebHostEnvironment environment)
     {
@@ -120,8 +116,7 @@ public static class SwaggerAutoDiscoveryExtensions
     }
 
     /// <summary>
-    /// Simple module name extraction from controller name
-    /// SIMPLIFIED: Basic extraction without complex namespace scanning
+    /// Module name extraction from controller name
     /// </summary>
     private static string ExtractModuleFromController(string? controllerName)
     {
@@ -131,7 +126,7 @@ public static class SwaggerAutoDiscoveryExtensions
         // Remove Controller suffix
         var cleanName = controllerName.Replace("Controller", "");
 
-        // Simple module detection from assembly name pattern
+        // Module detection from assembly name pattern
         var assemblies = AppDomain.CurrentDomain.GetAssemblies();
         
         foreach (var assembly in assemblies.Where(a => a.GetName().Name?.StartsWith("MicFx.Modules.") == true))
@@ -153,7 +148,6 @@ public static class SwaggerAutoDiscoveryExtensions
 
     /// <summary>
     /// Include XML comments from current assembly only
-    /// SIMPLIFIED: Only current assembly, no complex auto-discovery
     /// </summary>
     private static void IncludeXmlCommentsFromCurrentAssembly(SwaggerGenOptions options)
     {

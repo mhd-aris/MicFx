@@ -10,7 +10,7 @@ using Serilog.Formatting.Compact;
 namespace MicFx.Infrastructure.Logging;
 
 /// <summary>
-/// Simplified Serilog configuration for the MicFx Framework
+/// Serilog configuration for the MicFx Framework
 /// Provides basic structured logging without over-engineering
 /// </summary>
 public static class SerilogExtensions

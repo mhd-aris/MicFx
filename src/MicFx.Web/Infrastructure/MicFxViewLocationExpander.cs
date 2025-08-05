@@ -8,7 +8,7 @@ using System.Collections.Concurrent;
 namespace MicFx.Web.Infrastructure;
 
 /// <summary>
-/// Simplified view location expander for MicFx Framework
+/// View location expander for MicFx Framework
 /// Uses convention-based discovery for modular view resolution with caching
 /// </summary>
 public class MicFxViewLocationExpander : IViewLocationExpander

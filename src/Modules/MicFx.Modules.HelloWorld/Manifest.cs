@@ -1,10 +1,11 @@
 using MicFx.Core.Modularity;
+using MicFx.SharedKernel.Modularity;
 
 namespace MicFx.Modules.HelloWorld;
 
 /// <summary>
-/// HelloWorld module manifest - Primary Proof of Concept (PoC) for MicFx Framework
-/// Demonstrates complete module metadata and framework capabilities
+/// HelloWorld module manifest - Demo module for MicFx Framework
+/// Demonstrates pragmatic module metadata following clean principles
 /// </summary>
 public class Manifest : ModuleManifestBase
 {
@@ -19,12 +20,9 @@ public class Manifest : ModuleManifestBase
     public override string Version => "1.0.0";
 
     /// <summary>
-    /// Comprehensive description of the module's purpose as a PoC
+    /// Simple description focused on purpose
     /// </summary>
-    public override string Description => 
-        "Primary Proof of Concept (PoC) module demonstrating MicFx framework capabilities including " +
-        "clean architecture, structured logging, exception handling, auto-discovery, and zero-configuration patterns. " +
-        "Serves as the foundational example for building modular applications with MicFx.";
+    public override string Description => "Demo module showcasing MicFx framework patterns and conventions";
 
     /// <summary>
     /// Module author information
@@ -32,47 +30,27 @@ public class Manifest : ModuleManifestBase
     public override string Author => "MicFx Framework Team";
 
     /// <summary>
-    /// Descriptive tags for module categorization and discovery
+    /// Module category - Demo for PoC purposes
     /// </summary>
-    public override string[] Tags => new[]
-    {
-        "poc",                          // Proof of Concept
-        "demo",                         // Demonstration module
-        "framework-showcase",           // Framework capabilities showcase
-        "clean-architecture",           // Clean architecture implementation
-        "structured-logging",           // Structured logging example
-        "exception-handling",           // Exception handling patterns
-        "auto-discovery",              // Auto-discovery demonstration
-        "zero-configuration",          // Zero config principle
-        "solid-principles",            // SOLID principles implementation
-        "api-first",                   // API-first design
-        "enterprise-ready",            // Enterprise-grade patterns
-        "getting-started",             // Getting started example
-        "best-practices"               // Best practices demonstration
-    };
+    public override ModuleCategory Category => ModuleCategory.Demo;
 
     /// <summary>
-    /// Module dependencies - HelloWorld as PoC has no inter-module dependencies
-    /// Demonstrates zero-dependency module architecture
+    /// Tags - focused on essential discovery
     /// </summary>
-    public override string[]? Dependencies => Array.Empty<string>();
+    public override string[] CustomTags => new[] { "poc", "getting-started", "demo" };
 
     /// <summary>
-    /// Minimum framework version required
+    /// No dependencies - demonstrates zero-dependency module architecture
     /// </summary>
-    public override string MinimumFrameworkVersion => "1.0.0";
-
-            /// <summary>
-        /// Priority for module initialization (lower number = higher priority, loads first)
-        /// HelloWorld as PoC loads with normal priority
-        /// </summary>
-        public override int Priority => 100;
+    public override string? RequiredModule => null;
 
     /// <summary>
-    /// Whether this module is critical for system operation
-    /// PoC modules are typically not critical
+    /// Priority for module initialization - normal priority for demo module
+    /// </summary>
+    public override int Priority => 100;
+
+    /// <summary>
+    /// Not critical for system operation - demo modules are optional
     /// </summary>
     public override bool IsCritical => false;
-
-
 }

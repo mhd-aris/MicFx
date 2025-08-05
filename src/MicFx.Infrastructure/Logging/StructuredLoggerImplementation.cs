@@ -6,8 +6,7 @@ using System.Diagnostics;
 namespace MicFx.Infrastructure.Logging;
 
 /// <summary>
-/// Simplified structured logger implementation
-/// SIMPLIFIED: Removed complex stack trace analysis and excessive context pushing
+/// Structured logger implementation
 /// </summary>
 public class StructuredLoggerImplementation : IStructuredLogger
 {
@@ -73,8 +72,7 @@ public class StructuredLoggerImplementation : IStructuredLogger
 }
 
 /// <summary>
-/// Simple generic structured logger implementation 
-/// SIMPLIFIED: Removed unnecessary complexity
+/// Generic structured logger implementation
 /// </summary>
 /// <typeparam name="T">The type to create the logger for</typeparam>
 public class StructuredLoggerImplementation<T> : IStructuredLogger<T>
@@ -117,8 +115,7 @@ public class StructuredLoggerImplementation<T> : IStructuredLogger<T>
 }
 
 /// <summary>
-/// Simple structured logger factory
-/// SIMPLIFIED: Straightforward factory without complex abstractions
+/// Structured logger factory
 /// </summary>
 public class StructuredLoggerFactory : IStructuredLoggerFactory
 {
@@ -143,8 +140,7 @@ public class StructuredLoggerFactory : IStructuredLoggerFactory
 }
 
 /// <summary>
-/// Simple timed operation implementation
-/// SIMPLIFIED: Basic stopwatch functionality only
+/// Timed operation implementation
 /// </summary>
 internal class TimedOperationImplementation : IDisposable
 {

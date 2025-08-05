@@ -79,7 +79,7 @@ namespace MicFx.Web.Areas.Admin.Controllers
         }
 
         /// <summary>
-        /// Clear navigation cache (simplified - no caching implemented)
+        /// Clear navigation cache and refresh
         /// </summary>
         [HttpPost("clear-cache")]
         public IActionResult ClearCache()

@@ -75,8 +75,7 @@ public class MicFxModuleEnricher : ILogEventEnricher
     }
 
     /// <summary>
-    /// Simple module name extraction from assembly name
-    /// SIMPLIFIED: Basic string parsing without complex reflection
+    /// Extracts the module name from the assembly name
     /// </summary>
     private static string ExtractModuleName(string assemblyName)
     {

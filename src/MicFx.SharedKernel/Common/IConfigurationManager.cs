@@ -3,8 +3,7 @@ using System.ComponentModel.DataAnnotations;
 namespace MicFx.SharedKernel.Common;
 
 /// <summary>
-/// Simplified interface for centralized module configuration management
-/// Removed complex monitoring and hot reload features for better maintainability
+/// Interface for centralized module configuration management
 /// </summary>
 public interface IMicFxConfigurationManager
 {

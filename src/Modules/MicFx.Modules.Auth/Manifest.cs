@@ -1,68 +1,57 @@
 using MicFx.Core.Modularity;
+using MicFx.SharedKernel.Modularity;
 
 namespace MicFx.Modules.Auth
 {
     /// <summary>
-    /// Manifest untuk Auth module
+    /// Auth module manifest - Core authentication and authorization system
+    /// Critical security module with high priority loading
     /// </summary>
     public class Manifest : ModuleManifestBase
     {
+        /// <summary>
+        /// Module name
+        /// </summary>
         public override string Name => "Auth";
+
+        /// <summary>
+        /// Module version
+        /// </summary>
         public override string Version => "1.0.0";
-        public override string Description => "Core authentication module untuk MicFx framework dengan ASP.NET Core Identity";
-        public override string Author => "MicFx Team";
-
-        // Essential properties
-        public override string[]? Dependencies => Array.Empty<string>(); // Core framework dependencies handled automatically
-        public override string MinimumFrameworkVersion => "1.0.0";
-        public override int Priority => 1; // High priority as security module (lower number = loads first)
-        public override bool IsCritical => true; // Critical for system security
-        public override string[] Tags => new string[] { "auth", "security", "identity", "core" };
 
         /// <summary>
-        /// Database tables yang akan dibuat oleh module ini
+        /// Module description
         /// </summary>
-        public string[] DatabaseTables => new string[]
-        {
-            "Users",
-            "Roles",
-            "AspNetUserRoles",
-            "AspNetUserClaims",
-            "AspNetUserLogins",
-            "AspNetUserTokens",
-            "AspNetRoleClaims"
-        };
+        public override string Description => "Core authentication and authorization system using ASP.NET Core Identity";
 
         /// <summary>
-        /// API endpoints yang disediakan module ini
+        /// Module author
         /// </summary>
-        public string[] ApiEndpoints => new string[]
-        {
-            "/auth/login",
-            "/auth/register",
-            "/auth/logout", 
-            "/auth/status",
-            "/auth/profile",
-            "/auth/change-password",
-            "/admin/auth",
-            "/admin/auth/users",
-            "/admin/auth/roles",
-            "/admin/auth/quick-stats",
-            "/admin/auth/user-activity",
-            "/admin/auth/role-distribution"
-        };
+        public override string Author => "MicFx Framework Team";
 
         /// <summary>
-        /// Services yang di-register oleh module ini
+        /// Module category - Core security module
         /// </summary>
-        public string[] Services => new string[]
-        {
-            "IAuthService",
-            "AuthService",
-            "UserManager<User>",
-            "RoleManager<Role>",
-            "SignInManager<User>",
-            "AuthDbContext"
-        };
+        public override ModuleCategory Category => ModuleCategory.Core;
+
+        /// <summary>
+        /// Tags for discovery
+        /// </summary>
+        public override string[] CustomTags => new[] { "security", "identity", "authorization" };
+
+        /// <summary>
+        /// No external module dependencies
+        /// </summary>
+        public override string? RequiredModule => null;
+
+        /// <summary>
+        /// High priority - security modules load first
+        /// </summary>
+        public override int Priority => 1;
+
+        /// <summary>
+        /// Critical for system security
+        /// </summary>
+        public override bool IsCritical => true;
     }
 }

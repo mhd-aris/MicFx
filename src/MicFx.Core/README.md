@@ -484,7 +484,7 @@ public class YourModuleController : Controller
 
 ## 🔄 **Lifecycle Hooks**
 
-### **Module Lifecycle Events (Simplified)**
+### **Module Lifecycle Events**
 ```csharp
 public class Startup : ModuleStartupBase, IModuleLifecycle
 {

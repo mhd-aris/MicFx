@@ -14,14 +14,16 @@ public class TestModuleManifest : IModuleManifest
     public string Version { get; set; } = "1.0.0";
     public string Description { get; set; } = "Test Module";
     public string Author { get; set; } = "Test";
-    public string[]? Dependencies { get; set; } = Array.Empty<string>();
+    public ModuleCategory Category { get; set; } = ModuleCategory.Demo;
+    public string[] CustomTags { get; set; } = Array.Empty<string>();
+    public string? RequiredModule { get; set; }
     public bool IsEnabled { get; set; } = true;
+    public bool IsCritical { get; set; } = false;
     public int Priority { get; set; } = 100;
 }
 
 /// <summary>
 /// Concrete test implementation for module testing
-/// SIMPLIFIED: Focused only on basic module functionality without complex scenarios
 /// </summary>
 public class TestModuleStartup : ModuleStartupBase
 {
@@ -29,7 +31,7 @@ public class TestModuleStartup : ModuleStartupBase
 
     public TestModuleStartup(
         string moduleName,
-        string[]? dependencies = null,
+        string? requiredModule = null,
         int priority = 100,
         string version = "1.0.0",
         ILogger<ModuleStartupBase>? logger = null) : base(logger)
@@ -37,7 +39,7 @@ public class TestModuleStartup : ModuleStartupBase
         _manifest = new TestModuleManifest
         {
             Name = moduleName,
-            Dependencies = dependencies ?? Array.Empty<string>(),
+            RequiredModule = requiredModule,
             Priority = priority,
             Version = version
         };
@@ -47,13 +49,13 @@ public class TestModuleStartup : ModuleStartupBase
 
     public override async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
-        // Simple success implementation
+        // Implementation for tests
         await Task.CompletedTask;
     }
 
     public override async Task ShutdownAsync(CancellationToken cancellationToken = default)
     {
-        // Simple success implementation
+        // Implementation for tests
         await Task.CompletedTask;
     }
 
@@ -64,20 +66,36 @@ public class TestModuleStartup : ModuleStartupBase
 }
 
 /// <summary>
-/// Factory untuk membuat test module implementations
-/// SIMPLIFIED: Only basic module creation, remove unused factory methods
+/// Factory for creating test module implementations
 /// </summary>
 public static class TestModuleFactory
 {
     /// <summary>
     /// Creates a basic test module
     /// </summary>
-    public static TestModuleStartup CreateBasicModule(
-        string name,
-        string[]? dependencies = null,
-        int priority = 100,
-        string version = "1.0.0")
+    public static TestModuleStartup CreateBasicModule(string name, int priority = 100)
     {
-        return new TestModuleStartup(name, dependencies, priority, version);
+        return new TestModuleStartup(name, priority: priority);
     }
-} 
+
+    /// <summary>
+    /// Creates a module with dependency
+    /// </summary>
+    public static TestModuleStartup CreateModuleWithDependency(string name, string requiredModule, int priority = 100)
+    {
+        return new TestModuleStartup(name, requiredModule, priority);
+    }
+
+    /// <summary>
+    /// Creates multiple test modules for dependency resolution testing
+    /// </summary>
+    public static List<TestModuleStartup> CreateModuleChain()
+    {
+        return new List<TestModuleStartup>
+        {
+            new TestModuleStartup("CoreModule", priority: 1),
+            new TestModuleStartup("BusinessModule", "CoreModule", priority: 2),
+            new TestModuleStartup("UIModule", "BusinessModule", priority: 3)
+        };
+    }
+}

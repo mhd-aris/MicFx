@@ -4,7 +4,6 @@ namespace MicFx.SharedKernel.Common;
 
 /// <summary>
 /// Base interface for module configuration with startup-time loading and validation
-/// SIMPLIFIED: Removed hot reload and change detection for better stability
 /// </summary>
 public interface IModuleConfiguration
 {
@@ -32,14 +31,12 @@ public interface IModuleConfiguration
 
 /// <summary>
 /// Generic interface for strongly-typed module configuration
-/// SIMPLIFIED: Immutable configuration loaded at startup
 /// </summary>
 /// <typeparam name="T">Type of configuration class</typeparam>
 public interface IModuleConfiguration<T> : IModuleConfiguration where T : class
 {
     /// <summary>
     /// Loaded configuration value (immutable after startup)
-    /// SIMPLIFIED: Read-only after initial load
     /// </summary>
     T Value { get; }
 

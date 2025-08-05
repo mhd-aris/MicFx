@@ -106,7 +106,11 @@ public class HelloWorldController : ControllerBase
             manifest.Version,
             manifest.Description,
             manifest.Author,
-            manifest.Dependencies
+            manifest.Category,
+            manifest.Priority,
+            manifest.IsCritical,
+            RequiredModule = manifest.RequiredModule ?? "None",
+            CustomTags = manifest.CustomTags
         };
 
         return Ok(ApiResponse<object>.Ok(manifestData, 

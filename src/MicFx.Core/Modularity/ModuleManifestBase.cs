@@ -3,25 +3,25 @@ using MicFx.SharedKernel.Modularity;
 namespace MicFx.Core.Modularity
 {
     /// <summary>
-    /// Simplified base class for module manifests
-    /// Removed complex features for better maintainability
+    /// Base class for module manifests
     /// </summary>
     public abstract class ModuleManifestBase : IModuleManifest
     {
-        // Core properties (required)
+        // Required properties (must be implemented by modules)
         public abstract string Name { get; }
         public abstract string Version { get; }
-        public abstract string Description { get; }
-        public abstract string Author { get; }
-
-        // Essential properties with sensible defaults
-        public virtual string[]? Dependencies => Array.Empty<string>();
-        public virtual bool IsEnabled => true; // Enabled by default
-        public virtual int Priority => 100; // Default priority
-
-        // Additional metadata (optional)
-        public virtual string[] Tags => Array.Empty<string>();
-        public virtual string MinimumFrameworkVersion => "1.0.0";
-        public virtual bool IsCritical => false; // Non-critical by default
+        
+        // Optional properties with default values
+        public virtual string Description => $"{Name} module for MicFx";
+        public virtual string Author => "MicFx Developer";
+        public virtual ModuleCategory Category => ModuleCategory.Business;
+        public virtual string[] CustomTags => Array.Empty<string>();
+        
+        // Single dependency only
+        public virtual string? RequiredModule => null;
+        
+        // Framework properties
+        public virtual bool IsCritical => false;
+        public virtual int Priority => 100;
     }
 }

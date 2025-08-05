@@ -7,8 +7,7 @@ using System.ComponentModel.DataAnnotations;
 namespace MicFx.Core.Configuration;
 
 /// <summary>
-/// Simplified base class for module configuration with startup-time loading and validation
-/// SIMPLIFIED: Removed hot reload and change detection for better stability and predictability
+/// Base class for module configuration with startup-time loading and validation
 /// </summary>
 /// <typeparam name="T">Type of configuration class</typeparam>
 public abstract class ModuleConfigurationBase<T> : IModuleConfiguration<T> where T : class, new()
@@ -40,13 +39,11 @@ public abstract class ModuleConfigurationBase<T> : IModuleConfiguration<T> where
 
     /// <summary>
     /// Loaded configuration value (immutable after startup)
-    /// SIMPLIFIED: No change tracking, loaded once at startup
     /// </summary>
     public T Value { get; private set; }
 
     /// <summary>
     /// Load configuration from IConfiguration at startup
-    /// SIMPLIFIED: Load once at startup, no hot reload capability
     /// </summary>
     private T LoadConfiguration()
     {

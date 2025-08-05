@@ -10,102 +10,82 @@ using Serilog;
 namespace MicFx.Core.Extensions
 {
     /// <summary>
-    /// Simplified extension methods for module dependency and lifecycle management
-    /// SIMPLIFIED: Removed over-engineered optimizations for better maintainability
+    /// Extension methods for module management
     /// </summary>
     public static class ModuleDependencyExtensions
     {
         /// <summary>
-        /// Adds basic MicFx module management services
+        /// Adds MicFx module management services
         /// </summary>
         public static IServiceCollection AddMicFxModuleManagement(this IServiceCollection services)
         {
-            services.AddSingleton<ModuleDependencyResolver>();
-            services.AddSingleton<ModuleLifecycleManager>();
+            services.AddSingleton<ModuleLoader>();
+            services.AddSingleton<ModuleManager>();
 
             return services;
         }
 
         /// <summary>
-        /// Adds MicFx modules with simplified dependency management
-        /// SIMPLIFIED: Removed complex optimization and caching for clarity
+        /// Adds health checks for MicFx modules
+        /// </summary>
+        public static IServiceCollection AddMicFxModuleHealthChecks(this IServiceCollection services)
+        {
+            services.AddHealthChecks()
+                .AddCheck<ModuleHealthCheck>("micfx_modules");
+
+            return services;
+        }
+
+        /// <summary>
+        /// Adds MicFx modules with priority-based loading
         /// </summary>
         public static IServiceCollection AddMicFxModules(this IServiceCollection services)
         {
-            // Add basic module management services
+            // Add module management services
             services.AddMicFxModuleManagement();
 
-            // Simple module discovery without complex optimizations
+            // Discover modules via assembly scanning
             var moduleInstances = DiscoverModules();
             
             Log.Information("Discovered {ModuleCount} modules", moduleInstances.Count);
 
-            // Register module instances directly in DI
+            // Register module instances
             foreach (var moduleInstance in moduleInstances)
             {
                 services.AddSingleton(moduleInstance);
             }
 
-            // Configure module services in simple way
+            // Configure module services
             ConfigureModuleServices(services, moduleInstances);
 
             return services;
         }
 
         /// <summary>
-        /// Use MicFx modules with simplified lifecycle management
-        /// SIMPLIFIED: Straightforward module startup without complex optimizations
+        /// Configure MicFx modules with the application pipeline
         /// </summary>
-        public static async Task<WebApplication> UseMicFxModulesAsync(this WebApplication app)
+        public static async Task<IApplicationBuilder> UseMicFxModulesAsync(this IApplicationBuilder app)
         {
-            Log.Information("Starting MicFx modules");
-
-            try
+            var moduleManager = app.ApplicationServices.GetRequiredService<ModuleManager>();
+            
+            // Get all registered module instances and register them with ModuleManager
+            var moduleInstances = app.ApplicationServices.GetServices<ModuleStartupBase>().ToList();
+            
+            foreach (var moduleInstance in moduleInstances)
             {
-                // Configure module endpoints
-                ConfigureModuleEndpoints(app);
-
-                // Get the lifecycle manager and register modules with it
-                var lifecycleManager = app.Services.GetRequiredService<ModuleLifecycleManager>();
-                var moduleInstances = app.Services.GetServices<ModuleStartupBase>();
-
-                // Register modules with lifecycle manager
-                foreach (var moduleInstance in moduleInstances)
-                {
-                    lifecycleManager.RegisterModule(moduleInstance);
-                }
-
-                // Start modules using lifecycle manager
-                await lifecycleManager.StartAllModulesAsync();
-
-                Log.Information("All modules started successfully");
+                moduleManager.RegisterModule(moduleInstance);
             }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Failed to start modules");
-                throw;
-            }
+            
+            // Start all modules
+            await moduleManager.StartAllModulesAsync();
 
-            // Register simple shutdown handler
-            RegisterShutdownHandler(app);
+            Log.Information("MicFx modules configured successfully. {ModuleCount} modules active", moduleManager.ModuleCount);
 
             return app;
         }
 
         /// <summary>
-        /// Add simple module health checks
-        /// </summary>
-        public static IServiceCollection AddMicFxModuleHealthChecks(this IServiceCollection services)
-        {
-            services.AddHealthChecks()
-                .AddCheck<SimpleModuleHealthCheck>("modules");
-
-            return services;
-        }
-
-        /// <summary>
-        /// Simple module discovery without complex optimizations
-        /// SIMPLIFIED: Sequential loading, no caching, clear and debuggable
+        /// Discover modules using assembly scanning
         /// </summary>
         private static List<ModuleStartupBase> DiscoverModules()
         {
@@ -113,38 +93,32 @@ namespace MicFx.Core.Extensions
 
             try
             {
-                // Find module assemblies in simple way
-                var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
-                var moduleFiles = Directory.GetFiles(baseDirectory, "MicFx.Modules.*.dll", SearchOption.AllDirectories);
+                // Scan assemblies with MicFx.Modules prefix
+                var moduleTypes = AppDomain.CurrentDomain.GetAssemblies()
+                    .Where(a => a.GetName().Name?.StartsWith("MicFx.Modules.") == true)
+                    .SelectMany(a => a.GetTypes())
+                    .Where(t => typeof(ModuleStartupBase).IsAssignableFrom(t) && !t.IsAbstract)
+                    .ToList();
 
-                // Load assemblies sequentially (simpler, more debuggable)
-                foreach (var file in moduleFiles)
+                Log.Information("Found {ModuleTypeCount} module types", moduleTypes.Count);
+
+                // Create instances
+                foreach (var moduleType in moduleTypes)
                 {
                     try
                     {
-                        var assembly = System.Reflection.Assembly.LoadFrom(file);
+                        var moduleInstance = (ModuleStartupBase)Activator.CreateInstance(moduleType)!;
                         
-                        // Find module startup classes
-                        var moduleTypes = assembly.GetTypes()
-                            .Where(t => typeof(ModuleStartupBase).IsAssignableFrom(t) && !t.IsAbstract)
-                            .ToList();
-
-                        // Create module instances
-                        foreach (var moduleType in moduleTypes)
+                        if (IsValidModule(moduleInstance))
                         {
-                            var moduleInstance = (ModuleStartupBase)Activator.CreateInstance(moduleType)!;
-                            
-                            // Simple validation
-                            if (IsValidModule(moduleInstance))
-                            {
-                                moduleInstances.Add(moduleInstance);
-                                Log.Information("Loaded module: {ModuleName}", moduleInstance.Manifest.Name);
-                            }
+                            moduleInstances.Add(moduleInstance);
+                            Log.Information("Loaded module: {ModuleName} v{Version}", 
+                                moduleInstance.Manifest.Name, moduleInstance.Manifest.Version);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Warning(ex, "Failed to load module from: {FilePath}", file);
+                        Log.Warning(ex, "Failed to create instance of module type: {ModuleType}", moduleType.Name);
                     }
                 }
             }
@@ -158,7 +132,49 @@ namespace MicFx.Core.Extensions
         }
 
         /// <summary>
-        /// Simple module validation
+        /// Configure module services in priority order
+        /// </summary>
+        private static void ConfigureModuleServices(IServiceCollection services, List<ModuleStartupBase> moduleInstances)
+        {
+            // Create logger
+            using var loggerFactory = Microsoft.Extensions.Logging.LoggerFactory.Create(builder =>
+            {
+                builder.AddConsole();
+            });
+            var logger = loggerFactory.CreateLogger<ModuleLoader>();
+
+            var moduleLoader = new ModuleLoader(logger);
+
+            // Register all modules
+            foreach (var moduleInstance in moduleInstances)
+            {
+                moduleLoader.RegisterModule(moduleInstance.Manifest);
+                Log.Information("Registered module '{ModuleName}' with priority {Priority}", 
+                    moduleInstance.Manifest.Name, moduleInstance.Manifest.Priority);
+            }
+
+            // Validate registration
+            var validationResult = moduleLoader.ValidateRegistration();
+            Log.Information("Module registration validation completed. Valid: {IsValid}", validationResult);
+
+            // Configure services in priority order
+            var startupOrder = moduleLoader.GetStartupOrder();
+            Log.Information("Startup order for {ModuleCount} modules: {StartupOrder}", 
+                moduleInstances.Count, string.Join(" → ", startupOrder.Select(m => m.Name)));
+
+            foreach (var manifest in startupOrder)
+            {
+                var moduleInstance = moduleInstances.FirstOrDefault(m => m.Manifest.Name == manifest.Name);
+                if (moduleInstance != null)
+                {
+                    moduleInstance.ConfigureServices(services);
+                    Log.Information("Configured services for module: {ModuleName}", manifest.Name);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Validate module instance
         /// </summary>
         private static bool IsValidModule(ModuleStartupBase moduleInstance)
         {
@@ -176,143 +192,36 @@ namespace MicFx.Core.Extensions
 
             return true;
         }
-
-        /// <summary>
-        /// Configure module services in dependency order
-        /// SIMPLIFIED: Clear, sequential configuration without building intermediate service provider
-        /// </summary>
-        private static void ConfigureModuleServices(IServiceCollection services, List<ModuleStartupBase> moduleInstances)
-        {
-            // Create a simple logger instead of building service provider
-            using var loggerFactory = Microsoft.Extensions.Logging.LoggerFactory.Create(builder =>
-            {
-                builder.AddConsole();
-            });
-            var logger = loggerFactory.CreateLogger<ModuleDependencyResolver>();
-
-            var dependencyResolver = new ModuleDependencyResolver(logger);
-
-            // Register all modules with dependency resolver
-            foreach (var moduleInstance in moduleInstances)
-            {
-                dependencyResolver.RegisterModule(moduleInstance.Manifest);
-                Log.Information("Registered module '{ModuleName}' with priority {Priority}", 
-                    moduleInstance.Manifest.Name, moduleInstance.Manifest.Priority);
-            }
-
-            // Validate dependencies
-            var validationResult = dependencyResolver.ValidateDependencies();
-            Log.Information("Dependency validation completed. Valid: {IsValid}, Missing: {MissingCount}", 
-                validationResult.IsValid, validationResult.MissingDependencies.Count);
-
-            if (!validationResult.IsValid)
-            {
-                var errors = string.Join(", ", validationResult.MissingDependencies);
-                throw new InvalidOperationException($"Module dependency validation failed: {errors}");
-            }
-
-            // Configure services in dependency order
-            var startupOrder = dependencyResolver.GetStartupOrder();
-            Log.Information("Startup order for {ModuleCount} modules: {StartupOrder}", 
-                moduleInstances.Count, string.Join(" → ", startupOrder));
-
-            foreach (var moduleName in startupOrder)
-            {
-                var moduleInstance = moduleInstances.FirstOrDefault(m => m.Manifest.Name == moduleName);
-                if (moduleInstance != null)
-                {
-                    moduleInstance.ConfigureServices(services);
-                    Log.Information("Configured services for module: {ModuleName}", moduleName);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Configure module endpoints in simple way
-        /// </summary>
-        private static void ConfigureModuleEndpoints(WebApplication app)
-        {
-            var moduleInstances = app.Services.GetServices<ModuleStartupBase>();
-
-            foreach (var moduleInstance in moduleInstances)
-            {
-                try
-                {
-                    moduleInstance.Configure(app);
-                    Log.Information("Configured endpoints for module: {ModuleName}", moduleInstance.Manifest.Name);
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, "Failed to configure endpoints for module: {ModuleName}", moduleInstance.Manifest.Name);
-                    throw;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Register simple shutdown handler
-        /// </summary>
-        private static void RegisterShutdownHandler(WebApplication app)
-        {
-            var applicationLifetime = app.Services.GetRequiredService<IHostApplicationLifetime>();
-            
-            applicationLifetime.ApplicationStopping.Register(() =>
-            {
-                Log.Information("Application stopping, shutting down modules...");
-                
-                var lifecycleManager = app.Services.GetService<ModuleLifecycleManager>();
-                if (lifecycleManager != null)
-                {
-                    try
-                    {
-                        lifecycleManager.StopAllModulesAsync().GetAwaiter().GetResult();
-                        Log.Information("All modules shut down successfully");
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error(ex, "Error during module shutdown");
-                    }
-                }
-            });
-        }
     }
 
     /// <summary>
-    /// Simple health check for modules
-    /// SIMPLIFIED: Basic health check without complex diagnostics
+    /// Health check for modules
     /// </summary>
-    public class SimpleModuleHealthCheck : IHealthCheck
+    public class ModuleHealthCheck : IHealthCheck
     {
-        private readonly ModuleLifecycleManager? _lifecycleManager;
+        private readonly ModuleManager? _moduleManager;
 
-        public SimpleModuleHealthCheck(ModuleLifecycleManager? lifecycleManager)
+        public ModuleHealthCheck(ModuleManager? moduleManager)
         {
-            _lifecycleManager = lifecycleManager;
+            _moduleManager = moduleManager;
         }
 
         public Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
         {
-            if (_lifecycleManager == null)
+            if (_moduleManager == null)
             {
-                return Task.FromResult(HealthCheckResult.Unhealthy("Module lifecycle manager not available"));
+                return Task.FromResult(HealthCheckResult.Unhealthy("Module manager not available"));
             }
 
-            try
+            // Verify module count
+            var moduleCount = _moduleManager.ModuleCount;
+            var data = new Dictionary<string, object>
             {
-                var moduleStates = _lifecycleManager.GetAllModuleStates();
-                var errorCount = moduleStates.Values.Count(s => s.State == ModuleState.Error);
+                ["TotalModules"] = moduleCount,
+                ["Status"] = "All modules registered"
+            };
 
-                if (errorCount > 0)
-                {
-                    return Task.FromResult(HealthCheckResult.Unhealthy($"{errorCount} modules in error state"));
-                }
-
-                return Task.FromResult(HealthCheckResult.Healthy($"{moduleStates.Count} modules running"));
-            }
-            catch (Exception ex)
-            {
-                return Task.FromResult(HealthCheckResult.Unhealthy("Error checking module health", ex));
-            }
+            return Task.FromResult(HealthCheckResult.Healthy($"{moduleCount} modules registered", data));
         }
     }
 }

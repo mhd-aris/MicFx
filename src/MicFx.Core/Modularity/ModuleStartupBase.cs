@@ -11,8 +11,7 @@ using Microsoft.Extensions.Logging;
 namespace MicFx.Core.Modularity
 {
     /// <summary>
-    /// Simplified base class for module startup with predictable routing conventions
-    /// SIMPLIFIED: Removed over-engineered smart routing for better maintainability and debugging
+    /// Base class for module startup with predictable routing conventions
     /// </summary>
     public abstract class ModuleStartupBase : IMicFxModule, IModuleLifecycle
     {
@@ -51,7 +50,6 @@ namespace MicFx.Core.Modularity
 
         /// <summary>
         /// Configures endpoints for the module. Override ConfigureModuleEndpoints for custom endpoints.
-        /// SIMPLIFIED: Uses predictable routing conventions instead of smart routing
         /// </summary>
         public virtual void Configure(IEndpointRouteBuilder endpoints)
         {
@@ -119,8 +117,7 @@ namespace MicFx.Core.Modularity
         }
 
         /// <summary>
-        /// Simple controller registration - just find and register controllers
-        /// SIMPLIFIED: No complex type detection or classification
+        /// Registers controllers for the module
         /// </summary>
         private void RegisterControllers(IServiceCollection services)
         {
@@ -143,7 +140,6 @@ namespace MicFx.Core.Modularity
 
         /// <summary>
         /// Simple conventional routing - predictable and debuggable
-        /// SIMPLIFIED: Uses standard ASP.NET Core conventions instead of complex smart routing
         /// 
         /// Routing Convention:
         /// - API Controllers: Use [ApiController] + [Route] attributes for full control
@@ -171,7 +167,6 @@ namespace MicFx.Core.Modularity
 
         /// <summary>
         /// Extract module name from assembly in simple, predictable way
-        /// SIMPLIFIED: Single method, clear logic
         /// </summary>
         private string GetModuleName()
         {

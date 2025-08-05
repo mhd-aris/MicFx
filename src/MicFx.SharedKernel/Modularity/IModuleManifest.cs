@@ -1,18 +1,17 @@
 namespace MicFx.SharedKernel.Modularity
 {
     /// <summary>
-    /// Essential module manifest with core properties only
-    /// Simplified from over-engineered version with multiple interfaces
+    /// Pragmatic module manifest interface focused on essential properties
     /// </summary>
     public interface IModuleManifest
     {
         /// <summary>
-        /// Module name (required)
+        /// Module name (required) - must be unique
         /// </summary>
         string Name { get; }
 
         /// <summary>
-        /// Module version (required)
+        /// Module version (required) - semantic versioning recommended
         /// </summary>
         string Version { get; }
 
@@ -27,18 +26,39 @@ namespace MicFx.SharedKernel.Modularity
         string Author { get; }
 
         /// <summary>
-        /// Required dependencies (required)
+        /// Module category for organization and discovery
         /// </summary>
-        string[]? Dependencies { get; }
+        ModuleCategory Category { get; }
 
         /// <summary>
-        /// Whether module is enabled (default: true)
+        /// Custom tags for additional metadata (max 3 recommended)
         /// </summary>
-        bool IsEnabled { get; }
+        string[] CustomTags { get; }
 
+        /// <summary>
+        /// Required module dependency 
+        /// </summary>
+        string? RequiredModule { get; }
+
+        /// <summary>
+        /// Whether this module is critical for system operation
+        /// </summary>
+        bool IsCritical { get; }
+       
         /// <summary>
         /// Module priority for startup ordering (lower number = higher priority, loads first)
         /// </summary>
         int Priority { get; }
+    }
+
+    /// <summary>
+    /// Framework-defined module categories for consistency
+    /// </summary>
+    public enum ModuleCategory 
+    { 
+        Core,           // Framework core modules
+        Business,       // Business domain modules  
+        Integration,    // External integration modules
+        Demo            // Demo/PoC modules
     }
 }

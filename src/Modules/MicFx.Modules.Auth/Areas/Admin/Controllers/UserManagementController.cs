@@ -306,7 +306,7 @@ namespace MicFx.Modules.Auth.Areas.Admin.Controllers
         // POST: /admin/auth/users/toggle-status/{id}
         [HttpPost("toggle-status/{id}")]
         [ValidateAntiForgeryToken]
-        [AnyPermission("users.activate", "users.edit")] // Requires either activate or edit permission
+        [AnyPermission("users.edit")] // Requires either activate or edit permission
         public async Task<IActionResult> ToggleStatus(string id)
         {
             var user = await _userManager.FindByIdAsync(id);

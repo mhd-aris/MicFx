@@ -8,14 +8,12 @@ using MicFx.Core.Configuration;
 namespace MicFx.Core.Extensions;
 
 /// <summary>
-/// Extension methods untuk konfigurasi management
-/// Simplified version without complex monitoring features
+/// Extension methods for configuration management
 /// </summary>
 public static class ConfigurationExtensions
 {
     /// <summary>
-    /// Menambahkan MicFx Configuration Management ke service collection
-    /// Simplified version without monitoring and hot reload
+    /// Adds MicFx Configuration Management to the service collection
     /// </summary>
     public static IServiceCollection AddMicFxConfigurationManagement(
         this IServiceCollection services,
@@ -25,7 +23,6 @@ public static class ConfigurationExtensions
         var options = new SimpleConfigurationOptions();
         configureOptions?.Invoke(options);
 
-        // Register simplified configuration manager
         services.AddSingleton<IMicFxConfigurationManager, MicFxConfigurationManager>();
 
         // Validate configurations on startup if enabled
@@ -47,14 +44,15 @@ public static class ConfigurationExtensions
         // Register configuration instance
         services.AddSingleton(configurationFactory);
 
-        // Register configuration value sebagai scoped service
+        // Register as IModuleConfiguration<T>
         services.AddScoped<T>(serviceProvider =>
         {
             var config = serviceProvider.GetRequiredService<IModuleConfiguration<T>>();
             return config.Value;
         });
 
-        // Auto-register ke configuration manager saat service provider dibuat
+        // Add registration for IConfigurationRegistration<T>
+        // This allows other services to access the configuration registration
         services.AddSingleton<IConfigurationRegistration<T>>(serviceProvider =>
         {
             var configManager = serviceProvider.GetRequiredService<IMicFxConfigurationManager>();
@@ -70,23 +68,23 @@ public static class ConfigurationExtensions
 }
 
 /// <summary>
-/// Simplified options untuk konfigurasi Configuration Management
+/// Options for simple configuration management
 /// </summary>
 public class SimpleConfigurationOptions
 {
     /// <summary>
-    /// Apakah validasi konfigurasi saat startup
+    /// Whether to validate configuration at startup
     /// </summary>
     public bool ValidateOnStartup { get; set; } = true;
 
     /// <summary>
-    /// Apakah throw exception jika ada konfigurasi tidak valid
+    /// Whether to throw an exception if any configuration is invalid
     /// </summary>
     public bool ThrowOnValidationFailure { get; set; } = false;
 }
 
 /// <summary>
-/// Interface untuk registration tracking
+/// Interface for module configuration registration
 /// </summary>
 public interface IConfigurationRegistration<T> where T : class
 {
@@ -94,7 +92,7 @@ public interface IConfigurationRegistration<T> where T : class
 }
 
 /// <summary>
-/// Implementation untuk registration tracking
+/// Implementation of IConfigurationRegistration for module configurations
 /// </summary>
 internal class ConfigurationRegistration<T> : IConfigurationRegistration<T> where T : class
 {
@@ -107,7 +105,7 @@ internal class ConfigurationRegistration<T> : IConfigurationRegistration<T> wher
 }
 
 /// <summary>
-/// Simple hosted service untuk validasi konfigurasi saat startup
+/// Service to validate configurations at startup
 /// </summary>
 internal class SimpleConfigurationValidationService : IHostedService
 {

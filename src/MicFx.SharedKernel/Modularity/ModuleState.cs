@@ -1,8 +1,7 @@
 namespace MicFx.SharedKernel.Modularity;
 
 /// <summary>
-/// Simplified enum that describes the lifecycle status of a module
-/// Removed complex states for simplicity and maintainability
+/// Lifecycle status of a module
 /// </summary>
 public enum ModuleState
 {
@@ -27,10 +26,6 @@ public enum ModuleState
     Error = 3
 }
 
-/// <summary>
-/// Simplified interface for modules that support basic lifecycle events
-/// Reduced from 8 hooks to 2 essential hooks
-/// </summary>
 public interface IModuleLifecycle
 {
     /// <summary>

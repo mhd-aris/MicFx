@@ -5,8 +5,7 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 namespace MicFx.Infrastructure.Swagger;
 
 /// <summary>
-/// Simple operation filter that adds basic standard response examples
-/// SIMPLIFIED: Removed complex controller-specific generation and auto-examples
+/// Operation filter that adds basic standard response examples
 /// </summary>
 public class AutoResponseExampleFilter : IOperationFilter
 {
@@ -18,7 +17,6 @@ public class AutoResponseExampleFilter : IOperationFilter
 
     /// <summary>
     /// Adds basic standard HTTP response descriptions
-    /// SIMPLIFIED: Static examples, no dynamic generation
     /// </summary>
     private static void AddBasicResponseDescriptions(OpenApiOperation operation)
     {

@@ -12,13 +12,13 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 🚀 Configure simplified Serilog logging
+// Configure Serilog logging
 builder.Services.AddMicFxSerilog(builder.Configuration, builder.Environment);
 
 // Use Serilog as primary logging provider
 builder.Host.UseSerilog();
 
-// 1️⃣ Add Razor + Runtime Compilation
+// Add Razor + Runtime Compilation
 builder.Services.AddControllersWithViews()
     .AddRazorRuntimeCompilation();
 
@@ -50,23 +50,23 @@ builder.Services.Configure<RazorViewEngineOptions>(options =>
 });
 
 
-// 🔧 Add MicFx Configuration Management (Simplified)
+// Add MicFx Configuration Management
 builder.Services.AddMicFxConfigurationManagement(builder.Configuration, options =>
 {
     options.ValidateOnStartup = true;
     options.ThrowOnValidationFailure = builder.Environment.IsDevelopment();
 });
 
-// 📦 Register MicFx Abstractions (interfaces available to modules)
+// Register MicFx Abstractions (interfaces available to modules)
 builder.Services.AddMicFxAbstractions();
 
-// 🏗️ Register MicFx Infrastructure implementations
+// Register MicFx Infrastructure implementations
 builder.Services.AddMicFxInfrastructure();
 
-// 3️⃣ Load modules with simplified dependency management
+// Load modules with dependency management
 builder.Services.AddMicFxModules();
 
-// 🔐 Configure Authorization Policies for Admin Area
+// Configure Authorization Policies for Admin Area
 builder.Services.AddAuthorization(options =>
 {
     // Admin area access policy - matches the one in Auth module
@@ -93,19 +93,28 @@ builder.Services.AddMicFxExceptionHandling();
 // 🩺 Add Module Health Checks
 builder.Services.AddMicFxModuleHealthChecks();
 
-// 🔧 Add MicFx Swagger Infrastructure (with smart auto-routing support)
+// 🔧 Add MicFx Swagger Infrastructure 
 builder.Services.AddMicFxSwaggerInfrastructure();
 
 var app = builder.Build();
 
-// 📝 Use simplified Serilog request logging
+// Use Serilog for request logging
 app.UseMicFxSerilog();
 
 // 🛡️ Use MicFx Exception Handling (after Serilog request logging)
 app.UseMicFxExceptionHandling();
 
-// 4️⃣ Use modules with simplified lifecycle management
+// Use modules with lifecycle management
 await app.UseMicFxModulesAsync();
+
+// 🗄️ Ensure all module databases are initialized (migrations + fallback)
+await app.Services.EnsureModuleDatabasesAsync();
+
+// 🌱 Run module data seeders for development/demo data
+if (app.Environment.IsDevelopment() || app.Environment.IsStaging())
+{
+    await app.Services.RunModuleSeedersAsync();
+}
 
 // 🩺 Add health check endpoints
 app.UseHealthChecks("/health");
@@ -131,14 +140,14 @@ app.UseHealthChecks("/health/modules", new Microsoft.AspNetCore.Diagnostics.Heal
     }
 });
 
-// 📚 Use MicFx Swagger Infrastructure (development only)
+// Use MicFx Swagger Infrastructure (development only)
 app.UseMicFxSwaggerInfrastructure(app.Environment);
 
-// 5️⃣ Authentication & Authorization
+// Authentication & Authorization
 app.UseAuthentication();
 app.UseAuthorization();
 
-// 6️⃣ Configure MVC routing
+// Configure MVC routing
 app.UseStaticFiles();
 
 // Configure Area routing for Admin with authorization
@@ -157,11 +166,5 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.MapControllers();
-
-// 🌱 Run module data seeders untuk development/demo data
-if (app.Environment.IsDevelopment() || app.Environment.IsStaging())
-{
-    await app.Services.RunModuleSeedersAsync();
-}
 
 app.Run();

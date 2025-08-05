@@ -8,7 +8,6 @@ using System.ComponentModel.DataAnnotations;
 namespace MicFx.Core.Configuration;
 
 /// <summary>
-/// Simplified implementation untuk management konfigurasi module
 /// Removed complex monitoring and hot reload features for better maintainability
 /// </summary>
 public class MicFxConfigurationManager : IMicFxConfigurationManager
@@ -27,7 +26,7 @@ public class MicFxConfigurationManager : IMicFxConfigurationManager
     }
 
     /// <summary>
-    /// Mendaftarkan konfigurasi module
+    /// Registers module configuration
     /// </summary>
     public void RegisterModuleConfiguration<T>(IModuleConfiguration<T> configuration) where T : class
     {
@@ -91,7 +90,7 @@ public class MicFxConfigurationManager : IMicFxConfigurationManager
     }
 
     /// <summary>
-    /// Mendapatkan konfigurasi module berdasarkan nama module
+    /// Gets the module configuration by name.
     /// </summary>
     public IModuleConfiguration? GetModuleConfiguration(string moduleName)
     {
@@ -110,7 +109,7 @@ public class MicFxConfigurationManager : IMicFxConfigurationManager
     }
 
     /// <summary>
-    /// Mendapatkan semua konfigurasi module yang terdaftar
+    /// Gets all registered module configurations.
     /// </summary>
     public IEnumerable<IModuleConfiguration> GetAllConfigurations()
     {
@@ -118,7 +117,7 @@ public class MicFxConfigurationManager : IMicFxConfigurationManager
     }
 
     /// <summary>
-    /// Validasi semua konfigurasi module (simplified)
+    /// Validates all registered configurations
     /// </summary>
     public ValidationResult ValidateAllConfigurations()
     {
