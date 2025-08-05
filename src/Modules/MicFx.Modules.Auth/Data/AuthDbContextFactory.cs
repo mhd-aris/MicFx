@@ -11,25 +11,58 @@ public class AuthDbContextFactory : IDesignTimeDbContextFactory<AuthDbContext>
 {
     public AuthDbContext CreateDbContext(string[] args)
     {
-        // Build configuration
-        var configuration = new ConfigurationBuilder()
-            .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "MicFx.Web"))
-            .AddJsonFile("appsettings.json", optional: false)
-            .AddJsonFile("appsettings.Development.json", optional: true)
-            .Build();
-
-        // Get shared connection string from host configuration
-        var connectionString = configuration.GetConnectionString("DefaultConnection");
-        
-        if (string.IsNullOrEmpty(connectionString))
+        try
         {
-            throw new InvalidOperationException("Connection string 'DefaultConnection' not found in configuration.");
+            
+            var configuration = BuildConfiguration();
+            
+            var connectionString = GetConnectionString(configuration);
+            
+            // Configure DbContext
+            var optionsBuilder = new DbContextOptionsBuilder<AuthDbContext>();
+            optionsBuilder.UseSqlServer(connectionString, options =>
+            {
+                options.MigrationsAssembly(typeof(AuthDbContext).Assembly.FullName);
+            });
+
+            var context = new AuthDbContext(optionsBuilder.Options);
+            
+            return context;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"   Stack trace: {ex.StackTrace}");
+            throw;
+        }
+    }
+
+    private static IConfiguration BuildConfiguration()
+    {
+        var currentDir = Directory.GetCurrentDirectory();
+        
+        if (File.Exists(Path.Combine(currentDir, "appsettings.json")))
+        {
+            return new ConfigurationBuilder()
+                .SetBasePath(currentDir)
+                .AddJsonFile("appsettings.json", optional: false)
+                .AddJsonFile("appsettings.Development.json", optional: true)
+                .AddEnvironmentVariables()
+                .Build();
         }
 
-        // Configure DbContext options
-        var optionsBuilder = new DbContextOptionsBuilder<AuthDbContext>();
-        optionsBuilder.UseSqlServer(connectionString);
+        throw new DirectoryNotFoundException(
+            $"Web project not found. Current directory: {currentDir}. " +
+            "Expected appsettings.json in current directory.");
+    }
 
-        return new AuthDbContext(optionsBuilder.Options);
+    private static string GetConnectionString(IConfiguration configuration)
+    {
+        var configConnection = configuration.GetConnectionString("DefaultConnection");
+        if (!string.IsNullOrEmpty(configConnection))
+            return configConnection;
+
+        throw new InvalidOperationException(
+            "No connection string found. Please ensure:\n" +
+            "1. DefaultConnection exists in appsettings.json\n" );
     }
 } 
