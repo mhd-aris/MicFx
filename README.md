@@ -29,12 +29,12 @@
 ### 1. Clone Repository
 
 ```bash
-# Clone from Azure DevOps
-git clone git@ssh.dev.azure.com:v3/maribelajardev/micfx/micfx.git
+# Clone from Github
+git clone git@github.com:mhd-aris/MicFx.git
 cd micfx
 
 # Or using HTTPS
-git clone https://dev.azure.com/maribelajardev/micfx/_git/micfx
+git clone https://github.com/mhd-aris/MicFx.git
 cd micfx
 ```
 
@@ -90,7 +90,7 @@ git --version
 
 ```bash
 # Clone the repository
-git clone git@ssh.dev.azure.com:v3/maribelajardev/micfx/micfx.git
+git clone https://github.com/mhd-aris/MicFx.git
 cd micfx
 
 # Restore NuGet packages
